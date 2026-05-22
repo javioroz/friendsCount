@@ -1,0 +1,269 @@
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  Text,
+} from 'react-native';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { ThemedText } from '@/src/components/ThemedText';
+import { useGroupStore } from '@/src/stores/groupStore';
+import { useTheme } from '@/src/contexts/ThemeContext';
+
+const AddEditExpenseScreen = () => {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const groupId = params.groupId as string | undefined;
+  const expenseId = params.expenseId as string | undefined;
+  const { groups, addExpense, updateExpense, removeExpense } = useGroupStore();
+  const { colors } = useTheme();
+
+  const group = groupId ? groups.find((g) => g.id === groupId) : undefined;
+  const isEdit = Boolean(expenseId);
+
+  const [description, setDescription] = useState('');
+  const [amountText, setAmountText] = useState('');
+  const [paidBy, setPaidBy] = useState<string | null>(null);
+  const [dateText, setDateText] = useState('');
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [showPayerSelector, setShowPayerSelector] = useState(false);
+
+  useEffect(() => {
+    if (group) {
+      if (group.members.length > 0) setPaidBy(group.members[0].id);
+      setSelectedMembers(group.members.map((m) => m.id));
+    }
+
+    if (isEdit && group && expenseId) {
+      const exp = group.expenses.find((e) => e.id === expenseId);
+      if (exp) {
+        setDescription(exp.description);
+        setAmountText((exp.amount || 0).toFixed(2));
+        setPaidBy(exp.paidBy);
+        setSelectedMembers(exp.sharedBy || group.members.map((m) => m.id));
+        setDateText(exp.date ? exp.date.split('T')[0] : new Date().toISOString().split('T')[0]);
+      }
+    } else {
+      // default date to today
+      setDateText(new Date().toISOString().split('T')[0]);
+    }
+  }, [group, isEdit, expenseId]);
+
+  const handleAmountChange = (text: string) => {
+    // Allow only digits and dot
+    const filtered = text.replace(/[^0-9.]/g, '');
+    setAmountText(filtered);
+  };
+
+  const handleAddExpense = () => {
+    if (!groupId || !group) {
+      Alert.alert('Error', 'Grupo no encontrado');
+      return;
+    }
+
+    if (!description.trim()) {
+      Alert.alert('Error', 'Por favor ingresa una descripción');
+      return;
+    }
+
+    const amount = parseFloat(parseFloat(amountText || '0').toFixed(2));
+    if (!amount || amount <= 0) {
+      Alert.alert('Error', 'Por favor ingresa un importe válido');
+      return;
+    }
+
+    if (!paidBy) {
+      Alert.alert('Error', 'Selecciona quién pagó');
+      return;
+    }
+
+    const expense = {
+      id: `expense_${Date.now()}`,
+      groupId,
+      description: description.trim(),
+      amount,
+      paidBy,
+      sharedBy: selectedMembers.length ? selectedMembers : group.members.map((m) => m.id),
+      date: dateText ? new Date(dateText).toISOString() : new Date().toISOString(),
+    };
+
+    if (isEdit && expenseId) {
+      // Preserve the original id for update
+      const updated = { ...expense, id: expenseId } as any;
+      updateExpense(groupId, updated);
+    } else {
+      addExpense(groupId, expense as any);
+    }
+    Alert.alert('Éxito', 'Gasto añadido');
+    router.back();
+  };
+
+  const handleDeleteExpense = () => {
+    if (!groupId || !expenseId) {
+      Alert.alert('Error', 'No se pudo eliminar el gasto. Inténtalo de nuevo.');
+      return;
+    }
+
+    Alert.alert(
+      'Eliminar gasto',
+      '¿Estás seguro de que quieres eliminar este gasto?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            removeExpense(groupId, expenseId);
+            router.back();
+          },
+        },
+      ]
+    );
+  };
+
+  if (!group) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+        <ThemedText style={{ color: colors.text, margin: 16 }}>Grupo no encontrado</ThemedText>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <>
+      <Stack.Screen options={{ title: isEdit ? 'Editar gasto' : 'Añadir gasto' }} />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.formSection}>
+            <ThemedText style={[styles.label, { color: colors.text }]}>Descripción</ThemedText>
+            <TextInput
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
+              placeholder="Ej: Cena en Roma"
+              placeholderTextColor={colors.muted}
+              value={description}
+              onChangeText={setDescription}
+            />
+          </View>
+
+          <View style={styles.formSection}>
+            <ThemedText style={[styles.label, { color: colors.text }]}>Importe</ThemedText>
+            <TextInput
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
+              placeholder="0.00"
+              placeholderTextColor={colors.muted}
+              value={amountText}
+              onChangeText={handleAmountChange}
+              keyboardType="decimal-pad"
+            />
+          </View>
+
+          <View style={styles.formSection}>
+            <ThemedText style={[styles.label, { color: colors.text }]}>
+              Divisa: <ThemedText style={{ fontWeight: '400', color: colors.primary }}>{group.currency ?? 'EUR'}</ThemedText>
+            </ThemedText>
+          </View>
+
+          <View style={styles.formSection}>
+            <ThemedText style={[styles.label, { color: colors.text }]}>Fecha</ThemedText>
+            <TextInput
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.muted}
+              value={dateText}
+              onChangeText={setDateText}
+            />
+          </View>
+
+          <View style={styles.formSection}>
+            <ThemedText style={[styles.label, { color: colors.text }]}>Pagado por</ThemedText>
+            <TouchableOpacity
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' }]}
+              onPress={() => setShowPayerSelector(!showPayerSelector)}
+            >
+              <Text style={{ color: colors.text }}>{group.members.find((m) => m.id === paidBy)?.name ?? 'Seleccionar'}</Text>
+            </TouchableOpacity>
+            {showPayerSelector && (
+              <View style={{ marginTop: 8 }}>
+                {group.members.map((member) => (
+                  <TouchableOpacity key={member.id} style={styles.payerOption} onPress={() => { setPaidBy(member.id); setShowPayerSelector(false); }}>
+                    <Text style={{ color: colors.text }}>{member.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.formSection}>
+            <ThemedText style={[styles.label, { color: colors.text }]}>Dividir para</ThemedText>
+            {group.members.map((member) => {
+              const checked = selectedMembers.includes(member.id);
+              return (
+                <TouchableOpacity
+                  key={member.id}
+                  style={[styles.payerOption, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+                  onPress={() => {
+                    if (checked) setSelectedMembers(selectedMembers.filter((id) => id !== member.id));
+                    else setSelectedMembers([...selectedMembers, member.id]);
+                  }}
+                >
+                  <Text style={{ color: colors.text }}>{member.name}</Text>
+                  {checked ? (
+                    <Ionicons name="checkbox" size={20} color={colors.primary} />
+                  ) : (
+                    <Ionicons name="square-outline" size={20} color={colors.muted} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.createButton, { backgroundColor: colors.primary }]}
+            onPress={handleAddExpense}
+          >
+            <ThemedText style={styles.createButtonText}>{isEdit ? 'Guardar cambios' : 'Añadir gasto'}</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => router.back()}
+          >
+            <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>Cancelar</ThemedText>
+          </TouchableOpacity>
+
+          {isEdit && (
+            <TouchableOpacity
+              style={[styles.deleteButton, { backgroundColor: '#ef4444' }]}
+              onPress={handleDeleteExpense}
+            >
+              <ThemedText style={styles.deleteButtonText}>Eliminar gasto</ThemedText>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  content: { padding: 16 },
+  formSection: { marginBottom: 16 },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  input: { borderWidth: 1, borderRadius: 8, padding: 12, fontSize: 16, minHeight: 48 },
+  currencyButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, marginRight: 8, marginBottom: 8 },
+  payerOption: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, marginBottom: 8 },
+  createButton: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', marginBottom: 12 },
+  createButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  cancelButton: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, alignItems: 'center', marginBottom: 20 },
+  cancelButtonText: { fontSize: 16, fontWeight: '600' },
+  deleteButton: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
+  deleteButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+});
+
+export default AddEditExpenseScreen;

@@ -1,0 +1,25 @@
+{
+  "name": "@friendscount/server",
+  "version": "1.0.0",
+  "description": "GunDB relay server and API for FriendsCount",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "gun": "^0.2020.1241",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.0.0"
+  }
+}

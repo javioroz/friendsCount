@@ -1,0 +1,42 @@
+{
+  "name": "friendscount-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplicación de gestión de gastos compartidos con favores puntuados por IA",
+  "scripts": {
+    "dev:mobile": "npm run dev --workspace=packages/mobile",
+    "dev:server": "npm run dev --workspace=packages/server",
+    "dev": "npm run dev:mobile && npm run dev:server",
+    "build:mobile": "npm run build --workspace=packages/mobile",
+    "build:server": "npm run build --workspace=packages/server",
+    "build": "npm run build:server && npm run build:mobile",
+    "clean": "npm run clean:mobile && npm run clean:server",
+    "clean:mobile": "rm -rf packages/mobile/node_modules packages/mobile/.expo packages/mobile/web-build packages/mobile/dist",
+    "clean:server": "rm -rf packages/server/node_modules packages/server/dist packages/server/data.json packages/server/radata",
+    "install:all": "npm install",
+    "postinstall": "echo '✅ Instalación completada. Ejecuta: npm run dev:server y npm run dev:mobile'"
+  },
+  "workspaces": [
+    "packages/mobile",
+    "packages/server"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orosus/friendsCount.git"
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "gundb",
+    "expense-tracker",
+    "friends",
+    "shared-expenses",
+    "p2p"
+  ],
+  "author": "orosus",
+  "license": "MIT"
+}
