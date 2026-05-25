@@ -6,12 +6,13 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "types": ["node"]
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "app/**/*"
   ],
   "exclude": [
     "node_modules"

@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { Link } from '@/src/components/Link';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
+import { useAllGroupsSync } from '@/src/services/useGroupSync';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { Group, Member } from '@/src/types';
 
@@ -19,6 +20,9 @@ const GroupsScreen = () => {
   const { groups, addGroup, setCurrentGroup } = useGroupStore();
   const { colors } = useTheme();
   const [hasInitialized, setHasInitialized] = useState(false);
+  
+  // Sync all groups with GunDB
+  useAllGroupsSync();
   
   // Initialize with mock data on first load
   useEffect(() => {
@@ -62,7 +66,6 @@ const GroupsScreen = () => {
               groupId: 'group1',
               description: 'Fregó el baño a las 3am',
               madeBy: 'user1',
-              forMembers: ['user1', 'user2', 'user3'],
               date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
               aiResponse: {
                 score: 5,
@@ -75,7 +78,6 @@ const GroupsScreen = () => {
               groupId: 'group1',
               description: 'Hizo la comida',
               madeBy: 'user2',
-              forMembers: ['user1', 'user2', 'user3'],
               date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
               manualScore: 2,
             }

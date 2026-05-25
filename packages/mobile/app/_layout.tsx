@@ -91,6 +91,27 @@ const AppContent = () => {
             headerRight: () => <HeaderRightButton onPress={() => setIsModalVisible(true)} />,
           }}
         />
+        <Stack.Screen
+          name="createEditGroup"
+          options={{
+            title: 'Crear grupo',
+            headerBackTitle: 'Atrás',
+          }}
+        />
+        <Stack.Screen
+          name="joinGroup"
+          options={{
+            title: 'Unirse a grupo',
+            headerBackTitle: 'Atrás',
+          }}
+        />
+        <Stack.Screen
+          name="debug"
+          options={{
+            title: 'Debug - Store Local',
+            headerBackTitle: 'Atrás',
+          }}
+        />
       </Stack>
     </View>
   );

@@ -28,7 +28,6 @@ const AddEditFavorScreen = () => {
 
   const [description, setDescription] = useState('');
   const [madeBy, setMadeBy] = useState<string | null>(null);
-  const [affectedMembers, setAffectedMembers] = useState<string[]>([]);
   const [useIA, setUseIA] = useState(false);
   const [manualScore, setManualScore] = useState<number | null>(0);
   const [showMakerSelector, setShowMakerSelector] = useState(false);
@@ -38,27 +37,17 @@ const AddEditFavorScreen = () => {
 
     const defaultMemberId = group.members[0]?.id ?? null;
     setMadeBy(defaultMemberId);
-    setAffectedMembers(group.members.map((member) => member.id));
 
     if (isEditMode && favorId) {
       const favor = group.favors.find((f) => f.id === favorId);
       if (favor) {
         setDescription(favor.description);
         setMadeBy(favor.madeBy);
-        setAffectedMembers(favor.forMembers.length > 0 ? favor.forMembers : group.members.map((member) => member.id));
         setUseIA(favor.isAIUsed ?? false);
         setManualScore(favor.manualScore ?? 0);
       }
     }
   }, [group, isEditMode, favorId]);
-
-  const toggleMember = (memberId: string) => {
-    setAffectedMembers((current) =>
-      current.includes(memberId)
-        ? current.filter((id) => id !== memberId)
-        : [...current, memberId]
-    );
-  };
 
   const handleSaveFavor = () => {
     if (!groupId || !group) {
@@ -76,17 +65,11 @@ const AddEditFavorScreen = () => {
       return;
     }
 
-    if (affectedMembers.length === 0) {
-      Alert.alert('Error', 'Selecciona al menos una persona afectada');
-      return;
-    }
-
     const favor = {
       id: isEditMode && favorId ? favorId : `favor_${Date.now()}`,
       groupId,
       description: description.trim(),
       madeBy,
-      forMembers: affectedMembers,
       date: new Date().toISOString(),
       isAIUsed: useIA,
       manualScore: useIA ? undefined : manualScore ?? 0,
@@ -156,25 +139,6 @@ const AddEditFavorScreen = () => {
           </View>
 
           <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Afecta a</ThemedText>
-            {group.members.map((member) => {
-              const checked = affectedMembers.includes(member.id);
-              return (
-                <TouchableOpacity
-                  key={member.id}
-                  style={[styles.checkboxRow, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                  onPress={() => toggleMember(member.id)}
-                >
-                  <Text style={{ color: colors.text }}>{member.name}</Text>
-                  <Text style={{ color: checked ? colors.primary : colors.muted }}>
-                    {checked ? '☑' : '☐'}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <View style={styles.formSection}>
             <View style={styles.rowBetween}>
               <ThemedText style={[styles.label, { color: colors.text }]}>Utilizar IA</ThemedText>
               <Switch value={useIA} onValueChange={setUseIA} thumbColor={useIA ? colors.primary : colors.muted} />
@@ -235,15 +199,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     marginBottom: 8,
-  },
-  checkboxRow: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   rowBetween: {
     flexDirection: 'row',

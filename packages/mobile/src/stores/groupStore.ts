@@ -7,6 +7,7 @@ interface GroupStore {
   
   // Group management
   addGroup: (group: Group) => void;
+  removeGroup: (groupId: string) => void;
   setCurrentGroup: (groupId: string) => void;
   getCurrentGroup: () => Group | undefined;
   updateGroup: (groupId: string, updatedGroup: Group) => void;
@@ -41,6 +42,17 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
       groups: [...state.groups, group],
       currentGroupId: group.id,
     }));
+  },
+  
+  removeGroup: (groupId: string) => {
+    set((state) => {
+      const newGroups = state.groups.filter((g) => g.id !== groupId);
+      const newCurrentGroupId = state.currentGroupId === groupId ? null : state.currentGroupId;
+      return {
+        groups: newGroups,
+        currentGroupId: newCurrentGroupId,
+      };
+    });
   },
   
   setCurrentGroup: (groupId: string) => {

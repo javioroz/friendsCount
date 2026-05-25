@@ -32,70 +32,106 @@ const JoinGroupScreen = () => {
 
     try {
       const gun = getGun();
-      console.log('Joining group:', groupIdInput.trim());
+      const groupId = groupIdInput.trim();
+      console.log('🔵 Joining group:', groupId);
       
-      // First, let's try to get the group data
-      const groupRef = gun.get('friendscount').get('groups').get(groupIdInput.trim());
+      const groupRef = gun.get('friendscount').get('groups').get(groupId);
       
-      // Request the data
-      groupRef.on((data: any, id: string) => {
-        console.log('Received data for group:', id, data);
-      });
-
-      // Wait for the group data to be fetched
-      const groupData = await new Promise<any>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          console.log('Timeout waiting for group data');
-          reject(new Error('Timeout - No se recibió respuesta del servidor. Asegúrate de que el servidor GunDB está ejecutándose.'));
-        }, 15000); // 15 second timeout
-
-        // Use once to get data only once
-        groupRef.once((data: any, id: string) => {
-          console.log('Got data with once:', id, data);
-          clearTimeout(timeout);
-          if (data && data.meta) {
-            resolve(data);
-          } else {
-            reject(new Error('Grupo no encontrado. Verifica que el ID es correcto y que el grupo existe en el servidor.'));
-          }
+      // Read meta fields individually
+      const readMetaField = (field: string) => new Promise<string>((resolve) => {
+        groupRef.get('meta').get(field).once((value: any) => {
+          console.log(`🟢 Meta ${field}:`, value);
+          resolve(value);
         });
       });
-
-      console.log('Group data received:', groupData);
-
-      // Transform GunDB data to Group structure
-      const members: Record<string, Member> = groupData.members || {};
-      const expenses: Record<string, Expense> = groupData.expenses || {};
-      const favors: Record<string, Favor> = groupData.favors || {};
-      const rankings: Record<string, MemberRanking> = groupData.rankings || {};
-
-      // Build balances from members
-      const balances: Balance[] = Object.values(members).map(member => ({
-        memberId: member.id,
-        amount: 0,
-      }));
-
+      
+      // Read members
+      const readMembers = () => new Promise<Member[]>((resolve) => {
+        const members: Member[] = [];
+        const membersRef = groupRef.get('members');
+        
+        // First, get all member IDs
+        membersRef.map().once((memberData: any, memberId: string) => {
+          if (memberId) {
+            console.log('🟢 Found member ID:', memberId);
+          }
+        });
+        
+        // Wait a bit then read each member
+        setTimeout(() => {
+          membersRef.map().once((memberData: any, memberId: string) => {
+            if (memberId && memberData) {
+              // Read member fields individually
+              groupRef.get('members').get(memberId).get('id').once((id: any) => {
+                groupRef.get('members').get(memberId).get('name').once((name: any) => {
+                  groupRef.get('members').get(memberId).get('email').once((email: any) => {
+                    members.push({
+                      id: id || memberId,
+                      name: name || 'Unknown',
+                      email: email || '',
+                    });
+                    
+                    if (members.length >= 10) { // Max members limit
+                      resolve(members);
+                    }
+                  });
+                });
+              });
+            }
+          });
+          
+          // Timeout for members
+          setTimeout(() => {
+            console.log('🟢 Members collected:', members);
+            resolve(members);
+          }, 2000);
+        }, 500);
+      });
+      
+      // Read all meta fields
+      console.log('🟢 Reading meta fields...');
+      const [id, name, icon, currency, createdAt] = await Promise.all([
+        readMetaField('id'),
+        readMetaField('name'),
+        readMetaField('icon'),
+        readMetaField('currency'),
+        readMetaField('createdAt'),
+      ]);
+      
+      console.log('🟢 Meta read complete:', { id, name, icon, currency, createdAt });
+      
+      if (!id || !name) {
+        throw new Error('Grupo no encontrado. Verifica que el ID es correcto.');
+      }
+      
+      // Read members
+      console.log('🟢 Reading members...');
+      const members = await readMembers();
+      console.log('🟢 Members read complete:', members.length, 'members');
+      
+      // Build the group
       const group: Group = {
-        id: groupData.meta.id,
-        name: groupData.meta.name,
-        icon: groupData.meta.icon,
-        currency: groupData.meta.currency,
-        createdAt: groupData.meta.createdAt,
-        members: Object.values(members),
-        expenses: Object.values(expenses),
-        favors: Object.values(favors),
-        balances,
-        rankings: Object.values(rankings),
+        id: id as string,
+        name: name as string,
+        icon: (icon as string) || '🏠',
+        currency: (currency as string) || 'EUR',
+        createdAt: (createdAt as string) || new Date().toISOString(),
+        members: members,
+        expenses: [],
+        favors: [],
+        balances: members.map(m => ({ memberId: m.id, amount: 0 })),
+        rankings: [],
       };
-
-      console.log('Adding group to store:', group);
-      // Add group to store (this will sync it to the main screen)
+      
+      console.log('🟢 Group built:', group);
+      console.log('📦 Adding group to store...');
       addGroup(group);
-
+      console.log('✅ Group added to store');
+      
       Alert.alert('Éxito', 'Te has unido al grupo correctamente');
       router.back();
     } catch (error: any) {
-      console.error('Error joining group:', error);
+      console.error('🔴 Error joining group:', error);
       Alert.alert('Error', error.message || 'No se pudo conectar con el servidor');
     } finally {
       setIsLoading(false);

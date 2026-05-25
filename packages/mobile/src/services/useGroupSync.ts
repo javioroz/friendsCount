@@ -155,10 +155,39 @@ const updateGroupWithRankings = (groupId: string, rankings: MemberRanking[]) => 
 export const useAllGroupsSync = () => {
   const { groups } = useGroupStore();
   
-  // Subscribe to each group
   useEffect(() => {
+    // Subscribe to each group
     groups.forEach((group) => {
-      useGroupSync(group.id);
+      // Subscribe to group meta
+      subscribeToGroupMeta(group.id, (meta) => {
+        updateGroupWithMeta(group.id, meta);
+      });
+      
+      // Subscribe to members
+      subscribeToMembers(group.id, (members) => {
+        updateGroupWithMembers(group.id, members);
+      });
+      
+      // Subscribe to expenses
+      subscribeToExpenses(group.id, (expenses) => {
+        updateGroupWithExpenses(group.id, expenses);
+      });
+      
+      // Subscribe to favors
+      subscribeToFavors(group.id, (favors) => {
+        updateGroupWithFavors(group.id, favors);
+      });
+      
+      // Subscribe to rankings
+      subscribeToRankings(group.id, (rankings) => {
+        updateGroupWithRankings(group.id, rankings);
+      });
     });
+    
+    // Cleanup on unmount or when groups change
+    return () => {
+      // Note: GunDB subscriptions don't have explicit unsubscribe,
+      // they persist for the lifetime of the app
+    };
   }, [groups.map(g => g.id).join(',')]); // Re-run when group list changes
 };

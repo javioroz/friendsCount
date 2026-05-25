@@ -58,7 +58,7 @@ interface Member {
 const CreateEditGroupScreen = () => {
   const router = useRouter();
   const { groupId } = useLocalSearchParams<{ groupId?: string }>();
-  const { groups, addGroup, updateGroup } = useGroupStore();
+  const { groups, addGroup, updateGroup, removeGroup } = useGroupStore();
   const { colors } = useTheme();
   const [groupName, setGroupName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState(EMOJI_LIST[0]);
@@ -102,7 +102,13 @@ const CreateEditGroupScreen = () => {
   };
 
   const handleSaveGroup = async () => {
+    console.log('🔵 handleSaveGroup iniciado');
+    console.log('🔵 isEditMode:', isEditMode);
+    console.log('🔵 groupName:', groupName);
+    console.log('🔵 memberInputs:', memberInputs);
+    
     if (!groupName.trim()) {
+      console.log('🔴 Error: nombre de grupo vacío');
       Alert.alert('Error', 'Por favor ingresa el nombre del grupo');
       return;
     }
@@ -115,7 +121,10 @@ const CreateEditGroupScreen = () => {
         email: `${name.trim().toLowerCase().replace(/\s+/g, '.')}@group.local`,
       }));
 
+    console.log('🔵 validMembers:', validMembers);
+
     if (validMembers.length === 0) {
+      console.log('🔴 Error: no hay miembros válidos');
       Alert.alert('Error', 'Por favor agrega al menos un participante');
       return;
     }
@@ -205,45 +214,93 @@ const CreateEditGroupScreen = () => {
       createdAt: new Date().toISOString(),
     };
 
+    console.log('🟢 Iniciando guardado en GunDB...');
+    
     // Save to GunDB first
     try {
       const gun = getGun();
+      console.log('🟢 Gun instance:', gun ? 'exists' : 'null');
       const groupRef = gun.get('friendscount').get('groups').get(newGroup.id);
+      console.log('🟢 groupRef:', groupRef ? 'exists' : 'null');
       
-      await new Promise<void>((resolve, reject) => {
-        groupRef.put({
-          meta: {
-            id: newGroup.id,
-            name: newGroup.name,
-            icon: newGroup.icon,
-            currency: newGroup.currency,
-            createdAt: newGroup.createdAt,
-            createdBy: 'current_user', // TODO: Get from auth
-          },
-          members: newGroup.members.reduce((acc, member) => {
-            acc[member.id] = member;
-            return acc;
-          }, {} as Record<string, typeof validMembers[0]>),
-          expenses: {},
-          favors: {},
-          rankings: {},
-        }, (ack: any) => {
-          if (ack.err) {
-            reject(new Error(ack.err));
-          } else {
-            resolve();
-          }
+      // Create a promise with timeout
+      const putPromise = new Promise<void>((resolve, reject) => {
+        console.log('🟢 Ejecutando groupRef.put()...');
+        
+        // Save each meta field individually to avoid GunDB reference issues
+        const metaRef = groupRef.get('meta');
+        const saveMeta = () => new Promise<void>((resolveMeta, rejectMeta) => {
+          metaRef.get('id').put(newGroup.id);
+          metaRef.get('name').put(newGroup.name);
+          metaRef.get('icon').put(newGroup.icon);
+          metaRef.get('currency').put(newGroup.currency);
+          metaRef.get('createdAt').put(newGroup.createdAt);
+          metaRef.get('createdBy').put('current_user');
+          
+          // Give GunDB a moment to persist
+          setTimeout(resolveMeta, 500);
         });
+        
+        // Save members individually
+        const saveMembers = () => new Promise<void>((resolveMembers, rejectMembers) => {
+          const membersRef = groupRef.get('members');
+          newGroup.members.forEach(member => {
+            const memberRef = membersRef.get(member.id);
+            memberRef.get('id').put(member.id);
+            memberRef.get('name').put(member.name);
+            memberRef.get('email').put(member.email);
+          });
+          
+          // Give GunDB a moment to persist
+          setTimeout(resolveMembers, 500);
+        });
+        
+        // Execute in sequence
+        saveMeta()
+          .then(() => saveMembers())
+          .then(() => {
+            console.log('🟢 Meta y miembros guardados correctamente');
+            resolve();
+          })
+          .catch(err => {
+            console.log('🔴 Error guardando datos:', err);
+            reject(err);
+          });
       });
+      
+      // Add timeout of 5 seconds
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          console.log('🔴 Timeout de 5 segundos alcanzado');
+          reject(new Error('Timeout: GunDB put operation took too long'));
+        }, 5000);
+      });
+      
+      // Race between put and timeout
+      await Promise.race([putPromise, timeoutPromise]);
+      console.log('🟢 GunDB put completado exitosamente');
     } catch (error: any) {
-      console.error('Error saving group to GunDB:', error);
+      console.error('🔴 Error saving group to GunDB:', error);
       Alert.alert('Error', 'No se pudo guardar el grupo en el servidor. Se guardará solo localmente.');
     }
 
+    console.log('🟢 Antes de addGroup, grupos en store:', useGroupStore.getState().groups.length);
+    
     // Always add to local store (even if GunDB fails)
+    console.log('📦 Añadiendo grupo al store local:', JSON.stringify(newGroup, null, 2));
     addGroup(newGroup);
-    Alert.alert('Éxito', 'Grupo creado correctamente');
+    console.log('✅ addGroup llamado');
+    
+    const storeAfter = useGroupStore.getState();
+    console.log('✅ Después de addGroup, grupos en store:', storeAfter.groups.length);
+    console.log('✅ Grupos en store:', storeAfter.groups.map(g => ({ id: g.id, name: g.name })));
+    
+    // Navigate back first, then show success message
+    console.log('🟢 Llamando a router.back()');
     router.back();
+    setTimeout(() => {
+      Alert.alert('Éxito', 'Grupo creado correctamente');
+    }, 100);
   };
 
   const renderEmojiGrid = () => (
@@ -459,6 +516,31 @@ const CreateEditGroupScreen = () => {
             </ThemedText>
           </TouchableOpacity>
 
+          {isEditMode && (
+            <TouchableOpacity
+              style={[styles.deleteButton, { borderColor: '#ef4444' }]}
+              onPress={() => {
+                console.log('🗑️ Delete button pressed, isEditMode:', isEditMode, 'group:', group?.id);
+                if (group) {
+                  // Use native confirm() for web compatibility
+                  const confirmed = window.confirm(
+                    '¿Estás seguro de que quieres eliminar este grupo? Solo se eliminará de tu dispositivo local, no del servidor.'
+                  );
+                  if (confirmed) {
+                    console.log('🗑️ Confirmed delete for group:', group.id);
+                    removeGroup(group.id);
+                    router.back();
+                  }
+                } else {
+                  console.log('⚠️ No group found to delete');
+                }
+              }}
+            >
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <ThemedText style={[styles.deleteButtonText, { color: '#ef4444' }]}>Eliminar grupo</ThemedText>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[
               styles.cancelButton,
@@ -618,6 +700,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  deleteButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  deleteButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },

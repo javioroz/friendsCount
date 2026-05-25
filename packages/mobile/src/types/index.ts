@@ -21,8 +21,7 @@ export interface Favor {
   id: string;
   groupId: string;
   description: string;
-  madeBy: string; // Member ID
-  forMembers: string[]; // Array of Member IDs
+  madeBy: string; // Member ID - who did the favor
   date: string;
   isAIUsed?: boolean;
   manualScore?: number;
