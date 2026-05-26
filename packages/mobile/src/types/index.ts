@@ -55,6 +55,8 @@ export interface Group {
   icon: string;
   currency?: string;
   llmApiKey?: string;
+  llmModel?: string; // Model name for the LLM (e.g., "gpt-4", "claude-3")
+  llmEndpoint?: string; // Custom endpoint URL (optional, defaults to OpenAI-compatible)
   members: Member[];
   expenses: Expense[];
   favors: Favor[];

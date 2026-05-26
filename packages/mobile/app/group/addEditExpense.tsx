@@ -15,6 +15,21 @@ import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
 
+const CATEGORY_EMOJIS = [
+  { emoji: '🍺', label: 'Bares' },
+  { emoji: '🍔', label: 'Restaurantes' },
+  { emoji: '🛒', label: 'Supermercado' },
+  { emoji: '🏠', label: 'Vivienda' },
+  { emoji: '🚗', label: 'Transporte' },
+  { emoji: '🎬', label: 'Ocio' },
+  { emoji: '🩹', label: 'Salud' },
+  { emoji: '🧼', label: 'Limpieza' },
+  { emoji: '👕', label: 'Ropa' },
+  { emoji: '📚', label: 'Educación' },
+  { emoji: '💵', label: 'Pagos' },
+  { emoji: '💰', label: 'Otros' },
+];
+
 const AddEditExpenseScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -28,10 +43,12 @@ const AddEditExpenseScreen = () => {
 
   const [description, setDescription] = useState('');
   const [amountText, setAmountText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('💰');
   const [paidBy, setPaidBy] = useState<string | null>(null);
   const [dateText, setDateText] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [showPayerSelector, setShowPayerSelector] = useState(false);
+  const [showCategorySelector, setShowCategorySelector] = useState(false);
 
   useEffect(() => {
     if (group) {
@@ -44,6 +61,7 @@ const AddEditExpenseScreen = () => {
       if (exp) {
         setDescription(exp.description);
         setAmountText((exp.amount || 0).toFixed(2));
+        setSelectedCategory(exp.category ?? '💰');
         setPaidBy(exp.paidBy);
         setSelectedMembers(exp.sharedBy || group.members.map((m) => m.id));
         setDateText(exp.date ? exp.date.split('T')[0] : new Date().toISOString().split('T')[0]);
@@ -87,6 +105,7 @@ const AddEditExpenseScreen = () => {
       groupId,
       description: description.trim(),
       amount,
+      category: selectedCategory,
       paidBy,
       sharedBy: selectedMembers.length ? selectedMembers : group.members.map((m) => m.id),
       date: dateText ? new Date(dateText).toISOString() : new Date().toISOString(),
@@ -134,21 +153,67 @@ const AddEditExpenseScreen = () => {
     );
   }
 
+  const renderCategoryGrid = () => (
+    <View style={styles.categoryGrid}>
+      {CATEGORY_EMOJIS.map((cat) => (
+        <TouchableOpacity
+          key={cat.emoji}
+          style={[
+            styles.categoryButton,
+            {
+              backgroundColor: selectedCategory === cat.emoji ? colors.primary : colors.surface,
+              borderColor: selectedCategory === cat.emoji ? colors.primary : colors.border,
+            },
+          ]}
+          onPress={() => {
+            setSelectedCategory(cat.emoji);
+            setShowCategorySelector(false);
+          }}
+        >
+          <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+          <Text style={[styles.categoryLabel, { color: selectedCategory === cat.emoji ? '#fff' : colors.text }]}>
+            {cat.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
   return (
     <>
       <Stack.Screen options={{ title: isEdit ? 'Editar gasto' : 'Añadir gasto' }} />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
         <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Descripción</ThemedText>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
-              placeholder="Ej: Cena en Roma"
-              placeholderTextColor={colors.muted}
-              value={description}
-              onChangeText={setDescription}
-            />
+          <View style={styles.descriptionAndCategoryRow}>
+            <View style={styles.descriptionSection}>
+              <ThemedText style={[styles.label, { color: colors.text }]}>Descripción</ThemedText>
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
+                placeholder="Ej: Cena en Roma"
+                placeholderTextColor={colors.muted}
+                value={description}
+                onChangeText={setDescription}
+              />
+            </View>
+
+            <View style={styles.categorySection}>
+              <ThemedText style={[styles.label, { color: colors.text }]}>Categoría</ThemedText>
+              <TouchableOpacity
+                style={[
+                  styles.categorySelectorCompact,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.surface,
+                  },
+                ]}
+                onPress={() => setShowCategorySelector(!showCategorySelector)}
+              >
+                <Text style={styles.selectedCategoryEmoji}>{selectedCategory}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {showCategorySelector && renderCategoryGrid()}
 
           <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: colors.text }]}>Importe</ThemedText>
@@ -256,6 +321,52 @@ const styles = StyleSheet.create({
   formSection: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   input: { borderWidth: 1, borderRadius: 8, padding: 12, fontSize: 16, minHeight: 48 },
+  descriptionAndCategoryRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  descriptionSection: {
+    flex: 1,
+  },
+  categorySection: {
+    width: 100,
+  },
+  categorySelectorCompact: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 48,
+  },
+  selectedCategoryEmoji: {
+    fontSize: 24,
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+    gap: 8,
+  },
+  categoryButton: {
+    width: '15%',
+    aspectRatio: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+    marginBottom: 8,
+  },
+  categoryEmoji: {
+    fontSize: 32,
+  },
+  categoryLabel: {
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 4,
+  },
   currencyButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, marginRight: 8, marginBottom: 8 },
   payerOption: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, marginBottom: 8 },
   createButton: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', marginBottom: 12 },

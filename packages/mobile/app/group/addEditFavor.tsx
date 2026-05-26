@@ -9,11 +9,15 @@ import {
   Alert,
   Text,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
+import { callLLMForFavorEvaluation } from '@/src/services/llmService';
+import { getGun } from '@/src/services/gunService';
+import { putFavor } from '@/src/services/gunService';
 
 const SCORE_OPTIONS = Array.from({ length: 21 }, (_, index) => 10 - index);
 
@@ -31,6 +35,7 @@ const AddEditFavorScreen = () => {
   const [useIA, setUseIA] = useState(false);
   const [manualScore, setManualScore] = useState<number | null>(0);
   const [showMakerSelector, setShowMakerSelector] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!group) return;
@@ -49,7 +54,7 @@ const AddEditFavorScreen = () => {
     }
   }, [group, isEditMode, favorId]);
 
-  const handleSaveFavor = () => {
+  const handleSaveFavor = async () => {
     if (!groupId || !group) {
       Alert.alert('Error', 'Grupo no encontrado');
       return;
@@ -65,25 +70,115 @@ const AddEditFavorScreen = () => {
       return;
     }
 
-    const favor = {
-      id: isEditMode && favorId ? favorId : `favor_${Date.now()}`,
-      groupId,
-      description: description.trim(),
-      madeBy,
-      date: new Date().toISOString(),
-      isAIUsed: useIA,
-      manualScore: useIA ? undefined : manualScore ?? 0,
-    } as any;
-
-    if (isEditMode && favorId) {
-      updateFavor(groupId, favor);
-      Alert.alert('Éxito', 'Favor actualizado');
-    } else {
-      addFavor(groupId, favor);
-      Alert.alert('Éxito', 'Favor añadido');
+    // Check if group has API key when using IA
+    if (useIA && !group.llmApiKey) {
+      Alert.alert('Error', 'El grupo no tiene configurada una API Key para IA. Por favor, configúrala en los ajustes del grupo.');
+      return;
     }
 
-    router.back();
+    setIsLoading(true);
+
+    try {
+      const favorIdValue = isEditMode && favorId ? favorId : `favor_${Date.now()}`;
+      const member = group.members.find(m => m.id === madeBy);
+
+      if (!member) {
+        Alert.alert('Error', 'Miembro no encontrado');
+        setIsLoading(false);
+        return;
+      }
+
+      let aiResponse = null;
+
+      // If using IA, call the LLM API
+      if (useIA) {
+        try {
+          const favorForAI = {
+            id: favorIdValue,
+            groupId,
+            description: description.trim(),
+            madeBy,
+            date: new Date().toISOString(),
+          };
+
+          aiResponse = await callLLMForFavorEvaluation(group, favorForAI, member);
+        } catch (llmError: any) {
+          console.error('Error calling LLM:', llmError);
+          Alert.alert(
+            'Error IA',
+            `No se pudo obtener la evaluación de la IA: ${llmError.message}. ¿Quieres guardar el favor sin evaluación IA?`,
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Guardar sin IA',
+                onPress: async () => {
+                  const favorWithoutAI = {
+                    id: favorIdValue,
+                    groupId,
+                    description: description.trim(),
+                    madeBy,
+                    date: new Date().toISOString(),
+                    isAIUsed: false,
+                    manualScore: 0,
+                  };
+
+                  if (isEditMode && favorId) {
+                    updateFavor(groupId, favorWithoutAI);
+                  } else {
+                    addFavor(groupId, favorWithoutAI);
+                  }
+                  setIsLoading(false);
+                  router.back();
+                },
+              },
+            ]
+          );
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Create the favor object
+      const favor = {
+        id: favorIdValue,
+        groupId,
+        description: description.trim(),
+        madeBy,
+        date: new Date().toISOString(),
+        isAIUsed: useIA,
+        manualScore: useIA ? undefined : manualScore ?? 0,
+        aiResponse: aiResponse ? {
+          score: aiResponse.score[madeBy] ?? 0,
+          message: aiResponse.comment,
+          nickname: aiResponse.nicknames[madeBy] || '',
+        } : undefined,
+      } as any;
+
+      // Save to GunDB
+      try {
+        const gun = getGun();
+        await putFavor(groupId, favor);
+      } catch (gunError) {
+        console.error('Error saving favor to GunDB:', gunError);
+        // Continue anyway, local store will be updated
+      }
+
+      // Update local store
+      if (isEditMode && favorId) {
+        updateFavor(groupId, favor);
+        Alert.alert('Éxito', 'Favor actualizado');
+      } else {
+        addFavor(groupId, favor);
+        Alert.alert('Éxito', 'Favor añadido');
+      }
+
+      setIsLoading(false);
+      router.back();
+    } catch (error) {
+      console.error('Unexpected error saving favor:', error);
+      setIsLoading(false);
+      Alert.alert('Error', 'Ha ocurrido un error inesperado');
+    }
   };
 
   if (!group) {
@@ -169,10 +264,18 @@ const AddEditFavorScreen = () => {
           )}
 
           <TouchableOpacity
-            style={[styles.saveButton, { backgroundColor: colors.primary }]}
+            style={[styles.saveButton, { backgroundColor: colors.primary, opacity: isLoading ? 0.6 : 1 }]}
             onPress={handleSaveFavor}
+            disabled={isLoading}
           >
-            <ThemedText style={styles.saveButtonText}>{isEditMode ? 'Guardar favor' : 'Añadir favor'}</ThemedText>
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#fff" />
+                <ThemedText style={[styles.saveButtonText, { marginLeft: 8 }]}>Procesando con IA...</ThemedText>
+              </View>
+            ) : (
+              <ThemedText style={styles.saveButtonText}>{isEditMode ? 'Guardar favor' : 'Añadir favor'}</ThemedText>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -227,6 +330,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButton: {
     paddingVertical: 14,

@@ -14,10 +14,20 @@ interface Balance {
   amount: number;
 }
 
+interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  paidBy: string;
+  date: string;
+  category?: string;
+}
+
 interface Group {
   id: string;
   members: Member[];
   balances: Balance[];
+  expenses: Expense[];
 }
 
 interface Settlement {
@@ -57,6 +67,65 @@ const tabStyles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
+  balanceClickable: {
+    flex: 1,
+    cursor: 'pointer',
+  },
+  expensesList: {
+    marginBottom: 24,
+  },
+  expenseCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  expenseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  expenseDescriptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  expenseCategory: {
+    fontSize: 18,
+  },
+  expenseDescription: {
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    color: '#333',
+  },
+  expenseAmount: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  expenseDetail: {
+    fontSize: 12,
+    color: '#999',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
   balanceValue: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -69,7 +138,7 @@ const tabStyles = StyleSheet.create({
   balanceEmoji: {
     fontSize: 16,
   },
-  settlementSection: {
+  summarySection: {
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,
@@ -77,7 +146,7 @@ const tabStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
-  settlementHeader: {
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
@@ -196,9 +265,23 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [currentBalances, setCurrentBalances] = useState<Balance[]>(group.balances);
   const [isInfoModalVisible, setIsInfoModalVisible] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
   const getMemberName = (memberId: string) => {
     return group.members.find((m) => m.id === memberId)?.name || 'Unknown';
+  };
+
+  // Filter expenses paid by the selected member
+  const getMemberExpenses = (memberId: string) => {
+    return group.expenses.filter((expense) => expense.paidBy === memberId);
+  };
+
+  const handleMemberPress = (memberId: string) => {
+    setSelectedMemberId(memberId);
+  };
+
+  const handleBackToBalances = () => {
+    setSelectedMemberId(null);
   };
 
   // Greedy algorithm to calculate optimal settlements
@@ -255,8 +338,9 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
     const settlementExpense = {
       id: `settlement-${Date.now()}-${index}`,
       groupId: group.id,
-      description: 'Liquidación 💵',
+      description: 'Liquidación de deuda',
       amount: settlement.amount,
+      category: '💵', // Payment category
       paidBy: settlement.fromId, // Debtor pays
       sharedBy: [settlement.toId], // Creditor receives (only them)
       date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
@@ -296,18 +380,79 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
     setIsInfoModalVisible(false);
   };
 
+  // If a member is selected, show their expenses
+  if (selectedMemberId) {
+    const memberExpenses = getMemberExpenses(selectedMemberId);
+    const totalSpent = memberExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+    return (
+      <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
+        <TouchableOpacity style={tabStyles.backButton} onPress={handleBackToBalances}>
+          <ThemedText style={tabStyles.backButtonText}>← Volver a saldos</ThemedText>
+        </TouchableOpacity>
+
+        <ThemedText style={[tabStyles.sectionTitle, { color: colors.text, marginBottom: 16, fontSize: 18 }]}>
+          Gastos de {getMemberName(selectedMemberId)}
+        </ThemedText>
+
+        {memberExpenses.length === 0 ? (
+          <ThemedText style={[tabStyles.settlementText, { color: colors.muted, textAlign: 'center', marginTop: 24 }]}>
+            No hay gastos registrados para este miembro
+          </ThemedText>
+        ) : (
+          <View style={tabStyles.expensesList}>
+            {memberExpenses.map((expense) => (
+              <View
+                key={expense.id}
+                style={[tabStyles.expenseCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <View style={tabStyles.expenseHeader}>
+                  <View style={tabStyles.expenseDescriptionRow}>
+                    <ThemedText style={tabStyles.expenseCategory}>
+                      {expense.category || '💰'}
+                    </ThemedText>
+                    <ThemedText style={[tabStyles.expenseDescription, { color: colors.text }]}>
+                      {expense.description}
+                    </ThemedText>
+                  </View>
+                  <ThemedText style={[tabStyles.expenseAmount, { color: colors.primary }]}>
+                    €{expense.amount.toFixed(2)}
+                  </ThemedText>
+                </View>
+                <ThemedText style={[tabStyles.expenseDetail, { color: colors.muted }]}>
+                  Pagado por {getMemberName(expense.paidBy)} · {new Date(expense.date).toLocaleDateString()}
+                </ThemedText>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <View style={[tabStyles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 16 }]}>
+          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>Total pagado</ThemedText>
+          <ThemedText style={[tabStyles.expenseAmount, { color: colors.primary, fontSize: 24, marginTop: 8 }]}>
+            €{totalSpent.toFixed(2)}
+          </ThemedText>
+        </View>
+      </View>
+    );
+  }
+
+  // Default view: show balances
   return (
     <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
       <View style={tabStyles.balancesList}>
         <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>Saldos actuales</ThemedText>
         {group.balances.map((balance) => (
-          <View
+          <TouchableOpacity
             key={balance.memberId}
             style={[tabStyles.balanceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => handleMemberPress(balance.memberId)}
           >
-            <ThemedText style={[tabStyles.balanceName, { color: colors.text }]}>
-              {getMemberName(balance.memberId)}
-            </ThemedText>
+            <View style={tabStyles.balanceClickable}>
+              <ThemedText style={[tabStyles.balanceName, { color: colors.text }]}>
+                {getMemberName(balance.memberId)}
+              </ThemedText>
+            </View>
             <View style={tabStyles.balanceValue}>
               <ThemedText
                 style={[
@@ -323,12 +468,12 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
                 {balance.amount >= 0 ? '🟢' : '🔴'}
               </ThemedText>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
-      <View style={[tabStyles.settlementSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <View style={tabStyles.settlementHeader}>
+      <View style={[tabStyles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={tabStyles.sectionHeader}>
           <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>Liquidación óptima</ThemedText>
           <TouchableOpacity onPress={openInfoModal} style={tabStyles.infoIcon}>
             <ThemedText style={[tabStyles.infoIconText, { color: colors.primary }]}>ℹ️</ThemedText>
@@ -361,7 +506,7 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
             style={[tabStyles.calculateButton, { backgroundColor: colors.primary }]}
             onPress={handleCalculateSettlements}
           >
-            <ThemedText style={tabStyles.calculateButtonText}>Calcular movimientos</ThemedText>
+            <ThemedText style={tabStyles.calculateButtonText}>🔀 Calcular movimientos</ThemedText>
           </TouchableOpacity>
         ) : (
           <ThemedText style={[tabStyles.settlementText, { color: colors.muted }]}>

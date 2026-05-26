@@ -14,9 +14,24 @@ interface Ranking {
   nickname: string;
 }
 
+interface Favor {
+  id: string;
+  description: string;
+  madeBy: string;
+  date: string;
+  isAIUsed?: boolean;
+  manualScore?: number;
+  aiResponse?: {
+    score: number;
+    message: string;
+    nickname: string;
+  };
+}
+
 interface Group {
   members: Member[];
   rankings: Ranking[];
+  favors: Favor[];
 }
 
 interface RankingsTabProps {
@@ -77,16 +92,24 @@ const tabStyles = StyleSheet.create({
   scoreBarFill: {
     height: '100%',
   },
-  infoSection: {
+  summarySection: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  infoText: {
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 14,
     fontWeight: '600',
-    marginRight: 8,
+    color: '#333',
+    flex: 1,
   },
   infoIcon: {
     padding: 4,
@@ -106,6 +129,62 @@ const tabStyles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  favorsList: {
+    marginBottom: 24,
+  },
+  favorCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  favorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  favorDescription: {
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    color: '#333',
+  },
+  favorScore: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  favorDetail: {
+    fontSize: 12,
+    color: '#999',
+  },
+  aiBadge: {
+    fontSize: 10,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  rankingClickable: {
+    cursor: 'pointer',
+  },
 });
 
 export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
@@ -113,9 +192,23 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }
   const [raffleResult, setRaffleResult] = useState<string | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isInfoModalVisible, setIsInfoModalVisible] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
   const getMemberName = (memberId: string) => {
     return group.members.find((m) => m.id === memberId)?.name || 'Unknown';
+  };
+
+  // Filter favors made by the selected member
+  const getMemberFavors = (memberId: string) => {
+    return group.favors.filter((favor) => favor.madeBy === memberId);
+  };
+
+  const handleMemberPress = (memberId: string) => {
+    setSelectedMemberId(memberId);
+  };
+
+  const handleBackToRankings = () => {
+    setSelectedMemberId(null);
   };
 
   const performRaffle = () => {
@@ -176,6 +269,80 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }
     setIsInfoModalVisible(false);
   };
 
+  // If a member is selected, show their favors
+  if (selectedMemberId) {
+    const memberFavors = getMemberFavors(selectedMemberId);
+    const totalScore = memberFavors.reduce((sum, favor) => {
+      return sum + (favor.aiResponse?.score ?? favor.manualScore ?? 0);
+    }, 0);
+
+    return (
+      <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
+        <TouchableOpacity style={tabStyles.backButton} onPress={handleBackToRankings}>
+          <ThemedText style={tabStyles.backButtonText}>← Volver a clasificación</ThemedText>
+        </TouchableOpacity>
+
+        <ThemedText style={[tabStyles.sectionTitle, { color: colors.text, marginBottom: 16, fontSize: 18 }]}>
+          Favores de {getMemberName(selectedMemberId)}
+        </ThemedText>
+
+        {memberFavors.length === 0 ? (
+          <ThemedText style={[tabStyles.favorDetail, { color: colors.muted, textAlign: 'center', marginTop: 24 }]}>
+            No hay favores registrados para este miembro
+          </ThemedText>
+        ) : (
+          <View style={tabStyles.favorsList}>
+            {memberFavors.map((favor) => {
+              const score = favor.aiResponse?.score ?? favor.manualScore ?? 0;
+              const scoreColor = score > 0 ? '#22c55e' : score < 0 ? '#ef4444' : colors.muted;
+
+              return (
+                <View
+                  key={favor.id}
+                  style={[tabStyles.favorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                >
+                  <View style={tabStyles.favorHeader}>
+                    <ThemedText style={[tabStyles.favorDescription, { color: colors.text }]}>
+                      {favor.description}
+                    </ThemedText>
+                    <ThemedText style={[tabStyles.favorScore, { color: scoreColor }]}>
+                      {score > 0 ? '+' : ''}{score}
+                    </ThemedText>
+                  </View>
+                  {favor.aiResponse && (
+                    <ThemedText style={[tabStyles.favorDetail, { color: colors.muted, fontStyle: 'italic', marginBottom: 4 }]}>
+                      "{favor.aiResponse.message}"
+                    </ThemedText>
+                  )}
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <ThemedText style={[tabStyles.favorDetail, { color: colors.muted }]}>
+                      {new Date(favor.date).toLocaleDateString()}
+                    </ThemedText>
+                    {favor.isAIUsed && (
+                      <View style={[tabStyles.aiBadge, { backgroundColor: colors.primary + '20' }]}>
+                        <ThemedText style={[tabStyles.aiBadge, { color: colors.primary, fontSize: 10 }]}>
+                          IA
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        <View style={[tabStyles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 16 }]}>
+          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>Puntuación total</ThemedText>
+          <ThemedText style={[tabStyles.favorScore, { color: colors.primary, fontSize: 24, marginTop: 8 }]}>
+            {totalScore > 0 ? '+' : ''}{totalScore}
+          </ThemedText>
+        </View>
+      </View>
+    );
+  }
+
+  // Default view: show rankings
   return (
     <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
       <View style={tabStyles.rankingsList}>
@@ -185,9 +352,10 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }
           const barWidth = (ranking.score / (group.rankings[0]?.score || 100)) * 100;
 
           return (
-            <View
+            <TouchableOpacity
               key={ranking.memberId}
               style={[tabStyles.rankingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => handleMemberPress(ranking.memberId)}
             >
               <View style={tabStyles.rankingHeader}>
                 <ThemedText style={tabStyles.rankingMedal}>{medal}</ThemedText>
@@ -211,28 +379,27 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }
                   ]}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>
-
-      {/* Info Section */}
-      <View style={tabStyles.infoSection}>
-        <ThemedText style={[tabStyles.infoText, { color: colors.text }]}>
-          ¿A quién le toca la próxima tarea?
-        </ThemedText>
-        <TouchableOpacity onPress={openInfoModal} style={tabStyles.infoIcon}>
-          <ThemedText style={[tabStyles.infoIconText, { color: colors.primary }]}>ℹ️</ThemedText>
+      {/* Raffle Section */}
+      <View style={[tabStyles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {/* Info Section */}
+        <View style={tabStyles.sectionHeader}>
+          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>¿A quién le toca la proxima tarea?</ThemedText>
+          <TouchableOpacity onPress={openInfoModal} style={tabStyles.infoIcon}>
+            <ThemedText style={[tabStyles.infoIconText, { color: colors.primary }]}>ℹ️</ThemedText>
+          </TouchableOpacity>
+        </View>
+        {/* Raffle button*/}
+        <TouchableOpacity
+          style={[tabStyles.raffleButton, { backgroundColor: colors.primary }]}
+          onPress={performRaffle}
+        >
+          <ThemedText style={tabStyles.raffleButtonText}>🎲 Iniciar sorteo</ThemedText>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[tabStyles.raffleButton, { backgroundColor: colors.primary }]}
-        onPress={performRaffle}
-      >
-        <ThemedText style={tabStyles.raffleButtonText}>🎲 Iniciar sorteo</ThemedText>
-      </TouchableOpacity>
-
       {/* Raffle Result Modal */}
       <Modal
         visible={isModalVisible}

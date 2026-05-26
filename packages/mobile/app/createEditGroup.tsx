@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
   Text,
+  Switch,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,7 +38,10 @@ const CreateEditGroupScreen = () => {
   const [groupName, setGroupName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState(EMOJI_LIST[0]);
   const [selectedCurrency, setSelectedCurrency] = useState('EUR');
+  const [useAI, setUseAI] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [llmModel, setLlmModel] = useState('');
+  const [llmEndpoint, setLlmEndpoint] = useState('');
   const [showEmojiSelector, setShowEmojiSelector] = useState(false);
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const [memberInputs, setMemberInputs] = useState<string[]>(['']);
@@ -50,13 +54,20 @@ const CreateEditGroupScreen = () => {
       setGroupName(group.name);
       setSelectedIcon(group.icon ?? EMOJI_LIST[0]);
       setSelectedCurrency(group.currency ?? 'EUR');
+      // Enable AI if API key exists
+      setUseAI(Boolean(group.llmApiKey));
       setApiKey(group.llmApiKey ?? '');
+      setLlmModel(group.llmModel ?? '');
+      setLlmEndpoint(group.llmEndpoint ?? '');
       setMemberInputs(group.members.length ? group.members.map((member) => member.name) : ['']);
     } else if (!isEditMode) {
       setGroupName('');
       setSelectedIcon(EMOJI_LIST[0]);
       setSelectedCurrency('EUR');
+      setUseAI(false);
       setApiKey('');
+      setLlmModel('');
+      setLlmEndpoint('');
       setMemberInputs(['']);
     }
   }, [group, isEditMode]);
@@ -115,6 +126,8 @@ const CreateEditGroupScreen = () => {
         icon: selectedIcon,
         currency: selectedCurrency,
         llmApiKey: apiKey.trim(),
+        llmModel: llmModel.trim(),
+        llmEndpoint: llmEndpoint.trim(),
         members: validMembers,
         balances: validMembers.map((member) => ({
           memberId: member.id,
@@ -134,6 +147,9 @@ const CreateEditGroupScreen = () => {
               name: updatedGroup.name,
               icon: updatedGroup.icon,
               currency: updatedGroup.currency,
+              llmApiKey: updatedGroup.llmApiKey,
+              llmModel: updatedGroup.llmModel,
+              llmEndpoint: updatedGroup.llmEndpoint,
               createdAt: updatedGroup.createdAt,
             },
             members: updatedGroup.members.reduce((acc, member) => {
@@ -177,6 +193,8 @@ const CreateEditGroupScreen = () => {
       icon: selectedIcon,
       currency: selectedCurrency,
       llmApiKey: apiKey.trim(),
+      llmModel: llmModel.trim(),
+      llmEndpoint: llmEndpoint.trim(),
       members: validMembers,
       expenses: [],
       favors: [],
@@ -208,6 +226,15 @@ const CreateEditGroupScreen = () => {
           metaRef.get('name').put(newGroup.name);
           metaRef.get('icon').put(newGroup.icon);
           metaRef.get('currency').put(newGroup.currency);
+          if (newGroup.llmApiKey) {
+            metaRef.get('llmApiKey').put(newGroup.llmApiKey);
+          }
+          if (newGroup.llmModel) {
+            metaRef.get('llmModel').put(newGroup.llmModel);
+          }
+          if (newGroup.llmEndpoint) {
+            metaRef.get('llmEndpoint').put(newGroup.llmEndpoint);
+          }
           metaRef.get('createdAt').put(newGroup.createdAt);
           metaRef.get('createdBy').put('current_user');
           
@@ -415,26 +442,6 @@ const CreateEditGroupScreen = () => {
           </View>
 
           <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>API Key del LLM para favores</ThemedText>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: colors.border,
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                },
-              ]}
-              placeholder="opcional para funciones con IA"
-              placeholderTextColor={colors.muted}
-              value={apiKey}
-              onChangeText={setApiKey}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-
-          <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: colors.text }]}>Participantes</ThemedText>
             {memberInputs.map((memberName, index) => (
               <View key={index} style={styles.memberInputRow}>
@@ -471,6 +478,83 @@ const CreateEditGroupScreen = () => {
               <ThemedText style={[styles.addMemberText, { color: colors.primary }]}>Añadir participante</ThemedText>
             </TouchableOpacity>
           </View>
+
+          <View style={styles.formSection}>
+            <View style={styles.rowBetween}>
+              <ThemedText style={[styles.label, { color: colors.text }]}>Utilizar IA para favores</ThemedText>
+              <Switch
+                value={useAI}
+                onValueChange={setUseAI}
+                thumbColor={useAI ? colors.primary : colors.muted}
+              />
+            </View>
+          </View>
+
+          {useAI && (
+            <>
+              <View style={styles.formSection}>
+                <ThemedText style={[styles.label, { color: colors.text }]}>API Key del LLM (opcional)</ThemedText>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="Tu API key (ej: sk-...)"
+                  placeholderTextColor={colors.muted}
+                  value={apiKey}
+                  onChangeText={setApiKey}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry
+                />
+              </View>
+
+              <View style={styles.formSection}>
+                <ThemedText style={[styles.label, { color: colors.text }]}>Modelo del LLM (opcional)</ThemedText>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="Ej: gpt-4, claude-3-sonnet (default: gpt-4)"
+                  placeholderTextColor={colors.muted}
+                  value={llmModel}
+                  onChangeText={setLlmModel}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.formSection}>
+                <ThemedText style={[styles.label, { color: colors.text }]}>Endpoint del LLM (opcional)</ThemedText>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="Ej: https://api.openai.com/v1/chat/completions"
+                  placeholderTextColor={colors.muted}
+                  value={llmEndpoint}
+                  onChangeText={setLlmEndpoint}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                />
+              </View>
+            </>
+          )}
 
           {isEditMode && group && (
             <View style={styles.formSection}>
@@ -572,7 +656,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   selectedEmojiLarge: {
-    fontSize: 36,
+    fontSize: 24,
   },
   emojiGrid: {
     flexDirection: 'row',
@@ -581,7 +665,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emojiButton: {
-    width: '30%',
+    width: '8%',
     aspectRatio: 1,
     borderRadius: 8,
     borderWidth: 1,
@@ -626,6 +710,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 12,
     gap: 12,
+    alignItems: 'center',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   memberInput: {

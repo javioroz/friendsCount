@@ -15,6 +15,7 @@ interface Expense {
   amount: number;
   paidBy: string;
   date: string;
+  category?: string;
 }
 
 interface Group {
@@ -51,7 +52,17 @@ const tabStyles = StyleSheet.create({
   expenseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
+  },
+  expenseDescriptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  expenseCategory: {
+    fontSize: 18,
   },
   expenseDescription: {
     fontSize: 14,
@@ -110,9 +121,14 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
             style={[tabStyles.expenseCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
             <View style={tabStyles.expenseHeader}>
-              <ThemedText style={[tabStyles.expenseDescription, { color: colors.text }]}>
-                {expense.description}
-              </ThemedText>
+              <View style={tabStyles.expenseDescriptionRow}>
+                <ThemedText style={tabStyles.expenseCategory}>
+                  {expense.category || '💰'}
+                </ThemedText>
+                <ThemedText style={[tabStyles.expenseDescription, { color: colors.text }]}>
+                  {expense.description}
+                </ThemedText>
+              </View>
               <ThemedText style={[tabStyles.expenseAmount, { color: colors.primary }]}>
                 €{expense.amount.toFixed(2)}
               </ThemedText>

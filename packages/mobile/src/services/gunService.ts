@@ -39,6 +39,9 @@ interface GunGroupData {
     name: string;
     icon: string;
     currency?: string;
+    llmApiKey?: string;
+    llmModel?: string;
+    llmEndpoint?: string;
     createdAt: string;
     createdBy: string;
   };

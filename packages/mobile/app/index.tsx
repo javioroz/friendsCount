@@ -30,8 +30,8 @@ const GroupsScreen = () => {
       const mockGroups: Group[] = [
         {
           id: 'group1',
-          name: 'Viaje Roma',
-          icon: '🇮🇹',
+          name: 'Viaje de amigos',
+          icon: '🚗',
           currency: 'EUR',
           members: [
             { id: 'user1', name: 'Carlos', email: 'carlos@example.com' },
@@ -47,7 +47,7 @@ const GroupsScreen = () => {
               paidBy: 'user1',
               sharedBy: ['user1', 'user2', 'user3'],
               date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-              category: 'Comida',
+              category: '🍔',
             },
             {
               id: 'exp2',
@@ -57,7 +57,7 @@ const GroupsScreen = () => {
               paidBy: 'user2',
               sharedBy: ['user2', 'user1'],
               date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-              category: 'Transporte',
+              category: '🚗',
             },
           ],
           favors: [
@@ -113,7 +113,7 @@ const GroupsScreen = () => {
               paidBy: 'user4',
               sharedBy: ['user1', 'user4', 'user5'],
               date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-              category: 'Vivienda',
+              category: '🏠',
             },
           ],
           favors: [],

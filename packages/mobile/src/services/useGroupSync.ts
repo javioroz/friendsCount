@@ -80,6 +80,9 @@ const updateGroupWithMeta = (groupId: string, meta: any) => {
       name: meta.name,
       icon: meta.icon,
       currency: meta.currency,
+      llmApiKey: meta.llmApiKey,
+      llmModel: meta.llmModel,
+      llmEndpoint: meta.llmEndpoint,
       createdAt: meta.createdAt,
     });
   }

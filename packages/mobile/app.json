@@ -24,7 +24,7 @@
       "package": "com.friendscount.mobile"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/friendsCount_logo_light.png"
     },
     "plugins": [
       [
