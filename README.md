@@ -12,12 +12,12 @@ Es una aplicación multiplataforma (Android, iOS, Web) para gestionar gastos com
 - **Saldos y Liquidación**: Visualización de balances individuales y liquidación óptima con algoritmo greedy
 - **Favores**: Registro de favores con puntuación manual
 - **Clasificación**: Ranking de miembros por puntuación con apodos automáticos
+- **Sorteo** ponderado para asignar tareas
 - **Sincronización P2P**: GunDB para sincronización en tiempo real entre clientes
 - **Tema Claro/Oscuro**: Soporte completo para modo oscuro
 
 ### 🚧 En Desarrollo
 - Integración con IA (Claude) para puntuación automática de favores
-- Sorteo ponderado para asignar tareas
 - API REST con Fastify
 - Persistencia en PostgreSQL
 

@@ -33,6 +33,14 @@
           "origin": false
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "5b22ce12-40ce-4a3d-946b-a9af044c0e88"
+      }
+    }
   }
 }
