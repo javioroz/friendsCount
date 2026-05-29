@@ -9,6 +9,8 @@ import {
   Alert,
   Text,
   Switch,
+  Modal,
+  Linking,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +18,7 @@ import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { getGun } from '@/src/services/gunService';
+import { useTranslation } from 'react-i18next';
 
 const EMOJI_LIST = [
   '🏴‍☠️','🏠','🎉','🍕','🍔','🍺','🏖️','✈️','🚗','🌍','⭐','❤️','🔥',
@@ -35,6 +38,7 @@ const CreateEditGroupScreen = () => {
   const { groupId } = useLocalSearchParams<{ groupId?: string }>();
   const { groups, addGroup, updateGroup, removeGroup } = useGroupStore();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [groupName, setGroupName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState(EMOJI_LIST[0]);
   const [selectedCurrency, setSelectedCurrency] = useState('EUR');
@@ -44,6 +48,7 @@ const CreateEditGroupScreen = () => {
   const [llmEndpoint, setLlmEndpoint] = useState('');
   const [showEmojiSelector, setShowEmojiSelector] = useState(false);
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
+  const [showApiInfoModal, setShowApiInfoModal] = useState(false);
   const [memberInputs, setMemberInputs] = useState<string[]>(['']);
 
   const group = groupId ? groups.find((g) => g.id === groupId) : undefined;
@@ -363,7 +368,7 @@ const CreateEditGroupScreen = () => {
   if (isEditMode && !group) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
-        <ThemedText style={{ color: colors.text, margin: 16 }}>Grupo no encontrado</ThemedText>
+        <ThemedText style={{ color: colors.text, margin: 16 }}>{t('createEditGroup.groupNotFound')}</ThemedText>
       </SafeAreaView>
     );
   }
@@ -372,7 +377,7 @@ const CreateEditGroupScreen = () => {
     <>
       <Stack.Screen
         options={{
-          title: isEditMode ? 'Editar grupo' : 'Crear nuevo grupo',
+          title: isEditMode ? t('createEditGroup.edit') : t('createEditGroup.create'),
           headerBackTitle: 'Atrás',
         }}
       />
@@ -380,7 +385,7 @@ const CreateEditGroupScreen = () => {
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.groupNameAndIconRow}>
             <View style={styles.nameSection}>
-              <ThemedText style={[styles.label, { color: colors.text }]}>Nombre del grupo</ThemedText>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.groupName')}</ThemedText>
               <TextInput
                 style={[
                   styles.input,
@@ -390,7 +395,7 @@ const CreateEditGroupScreen = () => {
                     color: colors.text,
                   },
                 ]}
-                placeholder="Ej: Viaje Roma"
+                placeholder={t('createEditGroup.namePlaceholder')}
                 placeholderTextColor={colors.muted}
                 value={groupName}
                 onChangeText={setGroupName}
@@ -398,7 +403,7 @@ const CreateEditGroupScreen = () => {
             </View>
 
             <View style={styles.iconSection}>
-              <ThemedText style={[styles.label, { color: colors.text }]}>Icono</ThemedText>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.icon')}</ThemedText>
               <TouchableOpacity
                 style={[
                   styles.iconSelectorCompact,
@@ -417,7 +422,7 @@ const CreateEditGroupScreen = () => {
           {showEmojiSelector && renderEmojiGrid()}
 
           <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Divisa para gastos</ThemedText>
+            <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.currency')}</ThemedText>
             <TouchableOpacity
               style={[
                 styles.currencySelectorButton,
@@ -442,7 +447,7 @@ const CreateEditGroupScreen = () => {
           </View>
 
           <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Participantes</ThemedText>
+            <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.participants')}</ThemedText>
             {memberInputs.map((memberName, index) => (
               <View key={index} style={styles.memberInputRow}>
                 <TextInput
@@ -475,13 +480,13 @@ const CreateEditGroupScreen = () => {
               onPress={handleAddMemberField}
             >
               <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
-              <ThemedText style={[styles.addMemberText, { color: colors.primary }]}>Añadir participante</ThemedText>
+              <ThemedText style={[styles.addMemberText, { color: colors.primary }]}>{t('createEditGroup.addParticipant')}</ThemedText>
             </TouchableOpacity>
           </View>
 
           <View style={styles.formSection}>
             <View style={styles.rowBetween}>
-              <ThemedText style={[styles.label, { color: colors.text }]}>Utilizar IA para favores</ThemedText>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.useAI')}</ThemedText>
               <Switch
                 value={useAI}
                 onValueChange={setUseAI}
@@ -493,7 +498,12 @@ const CreateEditGroupScreen = () => {
           {useAI && (
             <>
               <View style={styles.formSection}>
-                <ThemedText style={[styles.label, { color: colors.text }]}>API Key del LLM (opcional)</ThemedText>
+                <View style={styles.labelWithInfo}>
+                  <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.llmApiKey')}</ThemedText>
+                  <TouchableOpacity onPress={() => setShowApiInfoModal(true)}>
+                    <Ionicons name="information-circle" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
                 <TextInput
                   style={[
                     styles.input,
@@ -503,7 +513,7 @@ const CreateEditGroupScreen = () => {
                       color: colors.text,
                     },
                   ]}
-                  placeholder="Tu API key (ej: sk-...)"
+                  placeholder={t('createEditGroup.llmApiKeyPlaceholder')}
                   placeholderTextColor={colors.muted}
                   value={apiKey}
                   onChangeText={setApiKey}
@@ -514,7 +524,7 @@ const CreateEditGroupScreen = () => {
               </View>
 
               <View style={styles.formSection}>
-                <ThemedText style={[styles.label, { color: colors.text }]}>Modelo del LLM (opcional)</ThemedText>
+                <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.llmModel')}</ThemedText>
                 <TextInput
                   style={[
                     styles.input,
@@ -524,7 +534,7 @@ const CreateEditGroupScreen = () => {
                       color: colors.text,
                     },
                   ]}
-                  placeholder="Ej: gpt-4, claude-3-sonnet (default: gpt-4)"
+                  placeholder={t('createEditGroup.llmModelPlaceholder')}
                   placeholderTextColor={colors.muted}
                   value={llmModel}
                   onChangeText={setLlmModel}
@@ -534,7 +544,7 @@ const CreateEditGroupScreen = () => {
               </View>
 
               <View style={styles.formSection}>
-                <ThemedText style={[styles.label, { color: colors.text }]}>Endpoint del LLM (opcional)</ThemedText>
+                <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.llmEndpoint')}</ThemedText>
                 <TextInput
                   style={[
                     styles.input,
@@ -544,7 +554,7 @@ const CreateEditGroupScreen = () => {
                       color: colors.text,
                     },
                   ]}
-                  placeholder="Ej: https://api.openai.com/v1/chat/completions"
+                  placeholder={t('createEditGroup.llmEndpointPlaceholder')}
                   placeholderTextColor={colors.muted}
                   value={llmEndpoint}
                   onChangeText={setLlmEndpoint}
@@ -558,7 +568,7 @@ const CreateEditGroupScreen = () => {
 
           {isEditMode && group && (
             <View style={styles.formSection}>
-              <ThemedText style={[styles.label, { color: colors.text }]}>ID del grupo</ThemedText>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.groupId')}</ThemedText>
               <View style={[styles.groupIdDisplay, { borderColor: colors.border, backgroundColor: colors.surface }]}>
                 <ThemedText style={[styles.groupIdText, { color: colors.muted }]}>{group.id}</ThemedText>
               </View>
@@ -570,7 +580,7 @@ const CreateEditGroupScreen = () => {
             onPress={handleSaveGroup}
           >
             <ThemedText style={styles.createButtonText}> 
-              {isEditMode ? 'Guardar ajustes del grupo' : 'Crear grupo'}
+              {isEditMode ? t('createEditGroup.saveSettings') : t('createEditGroup.create')}
             </ThemedText>
           </TouchableOpacity>
 
@@ -582,7 +592,7 @@ const CreateEditGroupScreen = () => {
                 if (group) {
                   // Use native confirm() for web compatibility
                   const confirmed = window.confirm(
-                    '¿Estás seguro de que quieres eliminar este grupo? Solo se eliminará de tu dispositivo local, no del servidor.'
+                    t('createEditGroup.deleteConfirm')
                   );
                   if (confirmed) {
                     console.log('🗑️ Confirmed delete for group:', group.id);
@@ -595,7 +605,7 @@ const CreateEditGroupScreen = () => {
               }}
             >
               <Ionicons name="trash-outline" size={20} color="#ef4444" />
-              <ThemedText style={[styles.deleteButtonText, { color: '#ef4444' }]}>Eliminar grupo</ThemedText>
+              <ThemedText style={[styles.deleteButtonText, { color: '#ef4444' }]}>{t('createEditGroup.delete')}</ThemedText>
             </TouchableOpacity>
           )}
 
@@ -610,6 +620,89 @@ const CreateEditGroupScreen = () => {
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
+
+      {/* API Info Modal */}
+      <Modal
+        visible={showApiInfoModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowApiInfoModal(false)}
+      >
+        <View style={apiModalStyles.overlay}>
+          <View style={[apiModalStyles.modal, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={apiModalStyles.header}>
+              <ThemedText style={[apiModalStyles.title, { color: colors.text }]}>
+                ℹ️ Cómo obtener tu API Key
+              </ThemedText>
+              <TouchableOpacity onPress={() => setShowApiInfoModal(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={apiModalStyles.content}>
+              {/* OpenAI */}
+              <View style={apiModalStyles.providerSection}>
+                <View style={apiModalStyles.providerHeader}>
+                  <ThemedText style={[apiModalStyles.providerName, { color: colors.text }]}>🤖 OpenAI (GPT)</ThemedText>
+                </View>
+                <ThemedText style={[apiModalStyles.description, { color: colors.muted }]}>
+                  Crea una cuenta en OpenAI y genera una API key en el dashboard.
+                </ThemedText>
+                <TouchableOpacity
+                  style={[apiModalStyles.linkButton, { borderColor: colors.primary }]}
+                  onPress={() => Linking.openURL('https://platform.openai.com/api-keys')}
+                >
+                  <ThemedText style={[apiModalStyles.linkText, { color: colors.primary }]}>
+                    platform.openai.com/api-keys →
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+
+              {/* Claude */}
+              <View style={apiModalStyles.providerSection}>
+                <View style={apiModalStyles.providerHeader}>
+                  <ThemedText style={[apiModalStyles.providerName, { color: colors.text }]}>🧠 Claude (Anthropic)</ThemedText>
+                </View>
+                <ThemedText style={[apiModalStyles.description, { color: colors.muted }]}>
+                  Regístrate en Anthropic y crea una API key desde tu perfil.
+                </ThemedText>
+                <TouchableOpacity
+                  style={[apiModalStyles.linkButton, { borderColor: colors.primary }]}
+                  onPress={() => Linking.openURL('https://console.anthropic.com/settings/keys')}
+                >
+                  <ThemedText style={[apiModalStyles.linkText, { color: colors.primary }]}>
+                    console.anthropic.com/settings/keys →
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+
+              {/* Gemini */}
+              <View style={apiModalStyles.providerSection}>
+                <View style={apiModalStyles.providerHeader}>
+                  <ThemedText style={[apiModalStyles.providerName, { color: colors.text }]}>💎 Gemini (Google)</ThemedText>
+                </View>
+                <ThemedText style={[apiModalStyles.description, { color: colors.muted }]}>
+                  Obtén una API key de Gemini desde Google AI Studio.
+                </ThemedText>
+                <TouchableOpacity
+                  style={[apiModalStyles.linkButton, { borderColor: colors.primary }]}
+                  onPress={() => Linking.openURL('https://aistudio.google.com/app/apikey')}
+                >
+                  <ThemedText style={[apiModalStyles.linkText, { color: colors.primary }]}>
+                    aistudio.google.com/app/apikey →
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+
+              <View style={apiModalStyles.infoBox}>
+                <ThemedText style={[apiModalStyles.infoText, { color: colors.muted }]}>
+                  💡 Una vez obtenida la API key, pégala en el campo "LLM API Key" y guarda los ajustes del grupo.
+                </ThemedText>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
@@ -791,6 +884,86 @@ const styles = StyleSheet.create({
   groupIdText: {
     fontSize: 14,
     fontFamily: 'monospace',
+  },
+  labelWithInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+});
+
+const apiModalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 20,
+  },
+  modal: {
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  content: {
+    maxHeight: 400,
+  },
+  providerSection: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  providerHeader: {
+    marginBottom: 8,
+  },
+  providerName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  description: {
+    fontSize: 14,
+    marginBottom: 10,
+    lineHeight: 20,
+  },
+  linkButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignSelf: 'flex-start',
+  },
+  linkText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  infoBox: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  infoText: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });
 

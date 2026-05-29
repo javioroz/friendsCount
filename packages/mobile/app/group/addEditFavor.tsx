@@ -104,9 +104,32 @@ const AddEditFavorScreen = () => {
           aiResponse = await callLLMForFavorEvaluation(group, favorForAI, member);
         } catch (llmError: any) {
           console.error('Error calling LLM:', llmError);
+          
+          // Extract meaningful error message
+          let errorMessage = llmError.message || 'Error desconocido';
+          
+          // Check for specific error types
+          if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+            errorMessage = 'API Key inválida o no autorizada (Error 401)';
+          } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+            errorMessage = 'Acceso denegado a la API (Error 403)';
+          } else if (errorMessage.includes('404') || errorMessage.includes('Not Found')) {
+            errorMessage = 'Endpoint de la API no encontrado (Error 404)';
+          } else if (errorMessage.includes('429') || errorMessage.includes('Too Many Requests') || errorMessage.includes('insufficient_quota') || errorMessage.includes('exceeded your current quota')) {
+            errorMessage = 'Se ha excedido el límite de uso de la API (Error 429 - Cuota insuficiente)';
+          } else if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error')) {
+            errorMessage = 'Error interno del servidor de la API (Error 500)';
+          } else if (errorMessage.includes('invalid JSON') || errorMessage.includes('parse')) {
+            errorMessage = 'La IA devolvió un formato no válido';
+          } else if (errorMessage.includes('network') || errorMessage.includes('Network') || errorMessage.includes('fetch')) {
+            errorMessage = 'Error de conexión de red. Verifica tu conexión a internet';
+          } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
+            errorMessage = 'La petición a la IA ha tardado demasiado (timeout)';
+          }
+          
           Alert.alert(
-            'Error IA',
-            `No se pudo obtener la evaluación de la IA: ${llmError.message}. ¿Quieres guardar el favor sin evaluación IA?`,
+            'Error en la evaluación con IA',
+            `No se pudo obtener la evaluación de la IA:\n\n${errorMessage}\n\n¿Quieres guardar el favor sin evaluación IA?`,
             [
               { text: 'Cancelar', style: 'cancel' },
               {

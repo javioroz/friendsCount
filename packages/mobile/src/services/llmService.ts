@@ -19,7 +19,7 @@ export const callLLMForFavorEvaluation = async (
   member: Member
 ): Promise<LLMResponse> => {
   const apiKey = group.llmApiKey;
-  const model = group.llmModel || 'gpt-4';
+  const model = group.llmModel || 'gpt-4o-mini';
   const endpoint = group.llmEndpoint || 'https://api.openai.com/v1/chat/completions';
 
   if (!apiKey) {

@@ -14,11 +14,13 @@ import { useGroupStore } from '@/src/stores/groupStore';
 import { useAllGroupsSync } from '@/src/services/useGroupSync';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { Group, Member } from '@/src/types';
+import { useTranslation } from 'react-i18next';
 
 const GroupsScreen = () => {
   const router = useRouter();
   const { groups, addGroup, setCurrentGroup } = useGroupStore();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [hasInitialized, setHasInitialized] = useState(false);
   
   // Sync all groups with GunDB
@@ -154,7 +156,7 @@ const GroupsScreen = () => {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <ThemedText style={[styles.subtitle, { color: colors.text }]}>Tus grupos</ThemedText>
+          <ThemedText style={[styles.subtitle, { color: colors.text }]}>{t('home.yourGroups')}</ThemedText>
         </View>
 
         <View style={styles.groupsList}>
@@ -186,13 +188,13 @@ const GroupsScreen = () => {
             style={[styles.button, { backgroundColor: colors.primary }]}
             onPress={handleCreateGroup}
           >
-            <ThemedText style={styles.buttonText}>+ Crear grupo</ThemedText>
+            <ThemedText style={styles.buttonText}>+ {t('home.createGroup')}</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={handleJoinGroup}
           >
-            <ThemedText style={[styles.buttonText, { color: colors.text }]}>+ Unirse a grupo</ThemedText>
+            <ThemedText style={[styles.buttonText, { color: colors.text }]}>+ {t('home.joinGroup')}</ThemedText>
           </TouchableOpacity>
         </View>
       </ScrollView>

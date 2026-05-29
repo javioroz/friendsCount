@@ -1,8 +1,10 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, Modal, Text, Switch } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity, Modal, Text, Switch, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider, useTheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/src/i18n/i18n';
 
 const HeaderRightButton = ({ onPress }: { onPress: () => void }) => {
   return (
@@ -12,10 +14,24 @@ const HeaderRightButton = ({ onPress }: { onPress: () => void }) => {
   );
 };
 
+const LANGUAGES = [
+  { code: 'es', label: 'Español' },
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'Français' },
+  { code: 'pt', label: 'Português' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'eo', label: 'Esperanto' },
+];
+
 const AppContent = () => {
   const { isDarkMode, colors, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isTabsTop, setIsTabsTop] = useState(false);
+
+  const changeLanguage = (lang: string) => {
+    i18n.changeLanguage(lang);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -37,9 +53,9 @@ const AppContent = () => {
             >
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Ajustes de la aplicación</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t('settings.settingsTitle')}</Text>
             <View style={styles.settingItem}>
-              <Text style={[styles.settingText, { color: colors.text }]}>Cambiar modo oscuro / claro</Text>
+              <Text style={[styles.settingText, { color: colors.text }]}>{t('settings.darkMode')}</Text>
               <Switch
                 value={isDarkMode}
                 onValueChange={toggleTheme}
@@ -48,18 +64,37 @@ const AppContent = () => {
               />
             </View>
             <View style={styles.settingItem}>
-              <Text style={[styles.settingText, { color: colors.text }]}>Cambiar pestañas arriba / abajo</Text>
-              <Switch
-                value={isTabsTop}
-                onValueChange={setIsTabsTop}
-                trackColor={{ false: '#767577', true: colors.secondary }}
-                thumbColor={isTabsTop ? '#f5dd4b' : '#f4f3f4'}
-              />
+              <Text style={[styles.settingLabel, { color: colors.text }]}>{t('settings.language')}</Text>
+              <ScrollView horizontal={false} style={{ maxHeight: 200 }}>
+                {LANGUAGES.map((lang) => (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[
+                      styles.languageOption,
+                      i18n.language === lang.code && { backgroundColor: colors.primary + '20' },
+                    ]}
+                    onPress={() => changeLanguage(lang.code)}
+                  >
+                    <Text
+                      style={[
+                        styles.languageOptionText,
+                        { color: colors.text },
+                        i18n.language === lang.code && { fontWeight: 'bold', color: colors.primary },
+                      ]}
+                    >
+                      {lang.label}
+                    </Text>
+                    {i18n.language === lang.code && (
+                      <Ionicons name="checkmark" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
             <View style={styles.settingItem}>
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Información sobre el desarrollador:</Text>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>{t('settings.developerInfo')}</Text>
               <Text style={[styles.modalText, { color: colors.text }]}>
-                Esta app fue desarrollada por PiratasLab, si te gusta invítanos a un café.
+                {t('settings.developerText')}
               </Text>
             </View>
           </View>
@@ -180,6 +215,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#374151',
     marginBottom: 10,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  languageOptionText: {
+    fontSize: 15,
   },
   modalText: {
     fontSize: 14,

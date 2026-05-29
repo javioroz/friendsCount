@@ -18,11 +18,13 @@ import { ExpensesTab } from './expensesTab';
 import { BalancesTab } from './balancesTab';
 import { FavorsTab } from './favorsTab';
 import { RankingsTab } from './rankingTab';
+import { useTranslation } from 'react-i18next';
 
 type TabType = 'expenses' | 'balances' | 'favors' | 'rankings';
 
 const GroupScreen = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [activeTab, setActiveTab] = React.useState<TabType>('expenses');
   const { groups } = useGroupStore();
@@ -40,6 +42,36 @@ const GroupScreen = () => {
 
   const handleStartRaffle = () => {
     Alert.alert('Sorteo', 'Eligiendo al miembro más necesitado... 🎲');
+  };
+
+  const getTabIcon = (tab: TabType) => {
+    switch (tab) {
+      case 'expenses':
+        return 'wallet';
+      case 'balances':
+        return 'bar-chart';
+      case 'favors':
+        return 'thumbs-up';
+      case 'rankings':
+        return 'dice';
+      default:
+        return 'ellipse';
+    }
+  };
+
+  const getTabLabel = (tab: TabType) => {
+    switch (tab) {
+      case 'expenses':
+        return t('tabs.expenses');
+      case 'balances':
+        return t('tabs.balances');
+      case 'favors':
+        return t('tabs.favors');
+      case 'rankings':
+        return t('tabs.rankings');
+      default:
+        return '';
+    }
   };
 
   return (
@@ -77,35 +109,7 @@ const GroupScreen = () => {
       />
       {group ? (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-          <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-            {['expenses', 'balances', 'favors', 'rankings'].map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                style={[
-                  styles.tabButton,
-                  activeTab === tab && { borderBottomColor: colors.primary },
-                ]}
-                onPress={() => setActiveTab(tab as TabType)}
-              >
-                <ThemedText
-                  style={[
-                    styles.tabButtonText,
-                    {
-                      color: activeTab === tab ? colors.primary : colors.muted,
-                      fontWeight: activeTab === tab ? '600' : '500',
-                    },
-                  ]}
-                >
-                  {tab === 'expenses' && 'Gastos'}
-                  {tab === 'balances' && 'Saldos'}
-                  {tab === 'favors' && 'Favores'}
-                  {tab === 'rankings' && 'Clasificación'}
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <ScrollView style={styles.content}>
+          <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
             {activeTab === 'expenses' && (
               <ExpensesTab group={group} onAdd={handleAddExpense} />
             )}
@@ -117,6 +121,37 @@ const GroupScreen = () => {
               <RankingsTab group={group} onStartRaffle={handleStartRaffle} />
             )}
           </ScrollView>
+
+          {/* Floating Bottom Tab Bar */}
+          <View style={[styles.bottomTabBar, { backgroundColor: colors.surface + 'E6' }]}>
+            {(['expenses', 'balances', 'favors', 'rankings'] as TabType[]).map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.bottomTabButton,
+                  activeTab === tab && styles.bottomTabButtonActive,
+                ]}
+                onPress={() => setActiveTab(tab)}
+              >
+                <Ionicons
+                  name={getTabIcon(tab)}
+                  size={22}
+                  color={activeTab === tab ? colors.primary : colors.muted}
+                />
+                <ThemedText
+                  style={[
+                    styles.bottomTabButtonText,
+                    {
+                      color: activeTab === tab ? colors.primary : colors.muted,
+                      fontWeight: activeTab === tab ? '600' : '500',
+                    },
+                  ]}
+                >
+                  {getTabLabel(tab)}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
+          </View>
         </SafeAreaView>
       ) : (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -153,6 +188,38 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 80, // Space for bottom tab bar
+  },
+  bottomTabBar: {
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  bottomTabButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  bottomTabButtonActive: {
+    backgroundColor: 'rgba(128, 90, 213, 0.1)',
+  },
+  bottomTabButtonText: {
+    fontSize: 10,
+    marginTop: 4,
   },
   groupHeaderLeft: {
     flexDirection: 'row',
