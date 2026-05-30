@@ -99,7 +99,7 @@ const CreateEditGroupScreen = () => {
     
     if (!groupName.trim()) {
       console.log('🔴 Error: nombre de grupo vacío');
-      Alert.alert('Error', 'Por favor ingresa el nombre del grupo');
+      Alert.alert(t('alert.error'), 'Por favor ingresa el nombre del grupo');
       return;
     }
 
@@ -115,13 +115,13 @@ const CreateEditGroupScreen = () => {
 
     if (validMembers.length === 0) {
       console.log('🔴 Error: no hay miembros válidos');
-      Alert.alert('Error', 'Por favor agrega al menos un participante');
+      Alert.alert(t('alert.error'), 'Por favor agrega al menos un participante');
       return;
     }
 
     if (isEditMode) {
       if (!group) {
-        Alert.alert('Error', 'Grupo no encontrado');
+        Alert.alert(t('alert.error'), 'Grupo no encontrado');
         return;
       }
 
@@ -187,7 +187,7 @@ const CreateEditGroupScreen = () => {
       }
 
       updateGroup(group.id, updatedGroup);
-      Alert.alert('Éxito', 'Ajustes guardados correctamente');
+      Alert.alert(t('alert.success'), 'Ajustes guardados correctamente');
       router.back();
       return;
     }
@@ -287,7 +287,7 @@ const CreateEditGroupScreen = () => {
       console.log('🟢 GunDB put completado exitosamente');
     } catch (error: any) {
       console.error('🔴 Error saving group to GunDB:', error);
-      Alert.alert('Error', 'No se pudo guardar el grupo en el servidor. Se guardará solo localmente.');
+      Alert.alert(t('alert.error'), 'No se pudo guardar el grupo en el servidor. Se guardará solo localmente.');
     }
 
     console.log('🟢 Antes de addGroup, grupos en store:', useGroupStore.getState().groups.length);
@@ -305,7 +305,7 @@ const CreateEditGroupScreen = () => {
     console.log('🟢 Llamando a router.back()');
     router.back();
     setTimeout(() => {
-      Alert.alert('Éxito', 'Grupo creado correctamente');
+      Alert.alert(t('alert.success'), 'Grupo creado correctamente');
     }, 100);
   };
 
@@ -616,7 +616,7 @@ const CreateEditGroupScreen = () => {
             ]}
             onPress={() => router.back()}
           >
-            <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>Cancelar</ThemedText>
+            <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>{t('createEditGroup.cancel')}</ThemedText>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

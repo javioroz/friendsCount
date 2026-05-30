@@ -18,6 +18,7 @@ import { useTheme } from '@/src/contexts/ThemeContext';
 import { callLLMForFavorEvaluation } from '@/src/services/llmService';
 import { getGun } from '@/src/services/gunService';
 import { putFavor } from '@/src/services/gunService';
+import { useTranslation } from 'react-i18next';
 
 const SCORE_OPTIONS = Array.from({ length: 21 }, (_, index) => 10 - index);
 
@@ -26,12 +27,17 @@ const AddEditFavorScreen = () => {
   const { groupId, favorId } = useLocalSearchParams<{ groupId?: string; favorId?: string }>();
   const { groups, addFavor, updateFavor } = useGroupStore();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const group = groupId ? groups.find((g) => g.id === groupId) : undefined;
   const isEditMode = Boolean(favorId);
 
   const [description, setDescription] = useState('');
   const [madeBy, setMadeBy] = useState<string | null>(null);
+  const [favorDate, setFavorDate] = useState<string>(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  });
   const [useIA, setUseIA] = useState(false);
   const [manualScore, setManualScore] = useState<number | null>(0);
   const [showMakerSelector, setShowMakerSelector] = useState(false);
@@ -50,29 +56,35 @@ const AddEditFavorScreen = () => {
         setMadeBy(favor.madeBy);
         setUseIA(favor.isAIUsed ?? false);
         setManualScore(favor.manualScore ?? 0);
+        if (favor.date) {
+          setFavorDate(favor.date.split('T')[0]); // Extract YYYY-MM-DD from ISO string
+        }
       }
     }
   }, [group, isEditMode, favorId]);
 
   const handleSaveFavor = async () => {
     if (!groupId || !group) {
-      Alert.alert('Error', 'Grupo no encontrado');
+      Alert.alert(t('alert.error'), 'Grupo no encontrado');
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert('Error', 'Por favor ingresa una descripción');
+      Alert.alert(t('alert.error'), 'Por favor ingresa una descripción');
       return;
     }
 
     if (!madeBy) {
-      Alert.alert('Error', 'Selecciona quién hizo el favor');
+      Alert.alert(t('alert.error'), 'Selecciona quién hizo el favor');
       return;
     }
 
+    // Convert the date string to ISO format (assuming midnight UTC)
+    const dateISOString = new Date(favorDate + 'T00:00:00Z').toISOString();
+
     // Check if group has API key when using IA
     if (useIA && !group.llmApiKey) {
-      Alert.alert('Error', 'El grupo no tiene configurada una API Key para IA. Por favor, configúrala en los ajustes del grupo.');
+      Alert.alert(t('alert.error'), 'El grupo no tiene configurada una API Key para IA. Por favor, configúrala en los ajustes del grupo.');
       return;
     }
 
@@ -83,7 +95,7 @@ const AddEditFavorScreen = () => {
       const member = group.members.find(m => m.id === madeBy);
 
       if (!member) {
-        Alert.alert('Error', 'Miembro no encontrado');
+        Alert.alert(t('alert.error'), 'Miembro no encontrado');
         setIsLoading(false);
         return;
       }
@@ -98,7 +110,7 @@ const AddEditFavorScreen = () => {
             groupId,
             description: description.trim(),
             madeBy,
-            date: new Date().toISOString(),
+            date: dateISOString,
           };
 
           aiResponse = await callLLMForFavorEvaluation(group, favorForAI, member);
@@ -131,16 +143,16 @@ const AddEditFavorScreen = () => {
             'Error en la evaluación con IA',
             `No se pudo obtener la evaluación de la IA:\n\n${errorMessage}\n\n¿Quieres guardar el favor sin evaluación IA?`,
             [
-              { text: 'Cancelar', style: 'cancel' },
+              { text: t('app.cancel'), style: 'cancel' },
               {
-                text: 'Guardar sin IA',
+                text: t('favors.saveWithoutAI'),
                 onPress: async () => {
                   const favorWithoutAI = {
                     id: favorIdValue,
                     groupId,
                     description: description.trim(),
                     madeBy,
-                    date: new Date().toISOString(),
+                    date: dateISOString,
                     isAIUsed: false,
                     manualScore: 0,
                   };
@@ -167,7 +179,7 @@ const AddEditFavorScreen = () => {
         groupId,
         description: description.trim(),
         madeBy,
-        date: new Date().toISOString(),
+        date: dateISOString,
         isAIUsed: useIA,
         manualScore: useIA ? undefined : manualScore ?? 0,
         aiResponse: aiResponse ? {
@@ -214,14 +226,14 @@ const AddEditFavorScreen = () => {
 
   return (
     <>
-      <Stack.Screen options={{ title: isEditMode ? 'Editar favor' : 'Añadir favor' }} />
+      <Stack.Screen options={{ title: isEditMode ? t('favors.edit') : t('favors.add') }} />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Descripción</ThemedText>
+            <ThemedText style={[styles.label, { color: colors.text }]}>{t('favors.description')}</ThemedText>
             <TextInput
               style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
-              placeholder="Ej: Lavó los platos"
+              placeholder={t('favors.descriptionPlaceholder')}
               placeholderTextColor={colors.muted}
               value={description}
               onChangeText={setDescription}
@@ -229,7 +241,7 @@ const AddEditFavorScreen = () => {
           </View>
 
           <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Hecho por</ThemedText>
+            <ThemedText style={[styles.label, { color: colors.text }]}>{t('favors.madeBy')}</ThemedText>
             <TouchableOpacity
               style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' }]}
               onPress={() => setShowMakerSelector((prev) => !prev)}
@@ -257,15 +269,27 @@ const AddEditFavorScreen = () => {
           </View>
 
           <View style={styles.formSection}>
+            <ThemedText style={[styles.label, { color: colors.text }]}>{t('favors.date')}</ThemedText>
+            <TextInput
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
+              placeholder={t('expenses.date') + ' (YYYY-MM-DD)'}
+              placeholderTextColor={colors.muted}
+              value={favorDate}
+              onChangeText={setFavorDate}
+              keyboardType="ascii-capable"
+            />
+          </View>
+
+          <View style={styles.formSection}>
             <View style={styles.rowBetween}>
-              <ThemedText style={[styles.label, { color: colors.text }]}>Utilizar IA</ThemedText>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('favors.useAI')}</ThemedText>
               <Switch value={useIA} onValueChange={setUseIA} thumbColor={useIA ? colors.primary : colors.muted} />
             </View>
           </View>
 
           {!useIA && (
             <View style={styles.formSection}>
-              <ThemedText style={[styles.label, { color: colors.text }]}>Puntuación manual</ThemedText>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('favors.manualScore')}</ThemedText>
               <View style={styles.scoreGrid}>
                 {SCORE_OPTIONS.map((option) => (
                   <TouchableOpacity
@@ -294,10 +318,10 @@ const AddEditFavorScreen = () => {
             {isLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color="#fff" />
-                <ThemedText style={[styles.saveButtonText, { marginLeft: 8 }]}>Procesando con IA...</ThemedText>
+                <ThemedText style={[styles.saveButtonText, { marginLeft: 8 }]}>{t('favors.procesingAI')}</ThemedText>
               </View>
             ) : (
-              <ThemedText style={styles.saveButtonText}>{isEditMode ? 'Guardar favor' : 'Añadir favor'}</ThemedText>
+              <ThemedText style={styles.saveButtonText}>{isEditMode ? t('favors.save') : t('favors.add')}</ThemedText>
             )}
           </TouchableOpacity>
 
@@ -305,7 +329,7 @@ const AddEditFavorScreen = () => {
             style={[styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => router.back()}
           >
-            <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>Cancelar</ThemedText>
+            <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>{t('app.cancel')}</ThemedText>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

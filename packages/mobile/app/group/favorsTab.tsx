@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useTheme } from '@/src/contexts/ThemeContext';
@@ -17,6 +17,7 @@ interface Favor {
   id: string;
   description: string;
   madeBy: string;
+  date: string;
   manualScore?: number;
   aiResponse?: AIResponse & { score?: number };
 }
@@ -33,12 +34,19 @@ interface FavorsTabProps {
 }
 
 const tabStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   tabContent: {
     padding: 16,
-    position: 'relative',
   },
-  favorsList: {
-    marginBottom: 24,
+  favorsList: {},
+  dateHeader: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
+    marginTop: 8,
   },
   favorCard: {
     backgroundColor: '#fff',
@@ -91,25 +99,6 @@ const tabStyles = StyleSheet.create({
     color: '#333',
     fontStyle: 'italic',
   },
-  fabButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  fabButtonText: {
-    fontSize: 28,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
   emptyText: {
     fontSize: 14,
     color: '#999',
@@ -130,55 +119,98 @@ export const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
     router.push(`./addEditFavor?groupId=${group.id}&favorId=${favorId}`);
   };
 
-  return (
-    <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
-      <View style={tabStyles.favorsList}>
-        {group.favors.length === 0 ? (
-          <ThemedText style={[tabStyles.emptyText, { color: colors.muted }]}>
-            No hay favores registrados aún
-          </ThemedText>
-        ) : (
-          group.favors.map((favor) => (
-            <TouchableOpacity
-              key={favor.id}
-              onPress={() => handleFavorPress(favor.id)}
-              style={[tabStyles.favorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            >
-              <View style={tabStyles.favorHeader}>
-                <ThemedText style={[tabStyles.favorDescription, { color: colors.text }]}>
-                  🌟 {favor.description}
-                </ThemedText>
-              </View>
-              <ThemedText style={[tabStyles.favorDetail, { color: colors.muted }]}>
-                Por: {getMemberName(favor.madeBy)}
-              </ThemedText>
-              <View style={tabStyles.scoreContainer}>
-                <ThemedText style={[tabStyles.scoreLabel, { color: colors.muted }]}>
-                  Puntuación:
-                </ThemedText>
-                <ThemedText style={[tabStyles.scoreValue, { color: colors.primary }]}>
-                  {favor.aiResponse?.score !== undefined 
-                    ? (favor.aiResponse.score > 0 ? `+${favor.aiResponse.score}` : `${favor.aiResponse.score}`)
-                    : favor.manualScore !== undefined 
-                      ? (favor.manualScore > 0 ? `+${favor.manualScore}` : `${favor.manualScore}`)
-                      : '0'}
-                </ThemedText>
-              </View>
-              {favor.aiResponse && (
-                <View style={[tabStyles.aiResponse, { borderLeftColor: colors.primary, backgroundColor: colors.surface }]}>
-                  <ThemedText style={[tabStyles.aiMessage, { color: colors.text }]}>
-                    🤖 {favor.aiResponse.message}
-                  </ThemedText>
-                </View>
-              )}
-            </TouchableOpacity>
-          ))
-        )}
-      </View>
+  // Sort favors by date (most recent first) and group by date
+  const getGroupedFavors = () => {
+    const sorted = [...group.favors].sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 
-      <TouchableOpacity style={[tabStyles.fabButton, { backgroundColor: colors.primary }]} onPress={onAdd}>
-        <ThemedText style={tabStyles.fabButtonText}>+</ThemedText>
-      </TouchableOpacity>
+    let currentGroup: { date: string; label: string; favors: typeof sorted } | null = null;
+    const result: Array<{ date: string; label: string; favors: typeof sorted }> = [];
+
+    sorted.forEach((favor) => {
+      const dateObj = new Date(favor.date);
+      const dateKey = dateObj.toISOString().split('T')[0];
+      
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      let label: string;
+      if (dateObj.toDateString() === today.toDateString()) {
+        label = 'Hoy';
+      } else if (dateObj.toDateString() === yesterday.toDateString()) {
+        label = 'Ayer';
+      } else {
+        label = dateKey; // Use YYYY-MM-DD format
+      }
+
+      if (!currentGroup || dateKey !== currentGroup.date) {
+        currentGroup = { date: dateKey, label, favors: [] };
+        result.push(currentGroup);
+      }
+      currentGroup.favors.push(favor);
+    });
+
+    return result;
+  };
+
+  const groupedFavors = getGroupedFavors();
+
+  return (
+    <View style={[tabStyles.container, { backgroundColor: colors.background }]}>
+      <ScrollView style={tabStyles.tabContent}>
+        <View style={tabStyles.favorsList}>
+          {groupedFavors.length === 0 ? (
+            <ThemedText style={[tabStyles.emptyText, { color: colors.muted }]}>
+              No hay favores registrados aún
+            </ThemedText>
+          ) : (
+            groupedFavors.map((group) => (
+              <View key={group.date}>
+                <ThemedText style={[tabStyles.dateHeader, { color: colors.text }]}>
+                  {group.label}
+                </ThemedText>
+                {group.favors.map((favor) => (
+                  <TouchableOpacity
+                    key={favor.id}
+                    onPress={() => handleFavorPress(favor.id)}
+                    style={[tabStyles.favorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  >
+                    <View style={tabStyles.favorHeader}>
+                      <ThemedText style={[tabStyles.favorDescription, { color: colors.text }]}>
+                        🌟 {favor.description}
+                      </ThemedText>
+                    </View>
+                    <ThemedText style={[tabStyles.favorDetail, { color: colors.muted }]}>
+                      Por: {getMemberName(favor.madeBy)}
+                    </ThemedText>
+                    <View style={tabStyles.scoreContainer}>
+                      <ThemedText style={[tabStyles.scoreLabel, { color: colors.muted }]}>
+                        Puntuación:
+                      </ThemedText>
+                      <ThemedText style={[tabStyles.scoreValue, { color: colors.primary }]}>
+                        {favor.aiResponse?.score !== undefined 
+                          ? (favor.aiResponse.score > 0 ? `+${favor.aiResponse.score}` : `${favor.aiResponse.score}`)
+                          : favor.manualScore !== undefined 
+                            ? (favor.manualScore > 0 ? `+${favor.manualScore}` : `${favor.manualScore}`)
+                            : '0'}
+                      </ThemedText>
+                    </View>
+                    {favor.aiResponse && (
+                      <View style={[tabStyles.aiResponse, { borderLeftColor: colors.primary, backgroundColor: colors.surface }]}>
+                        <ThemedText style={[tabStyles.aiMessage, { color: colors.text }]}>
+                          🤖 {favor.aiResponse.message}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 };

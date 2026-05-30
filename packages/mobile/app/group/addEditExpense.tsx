@@ -14,20 +14,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
-const CATEGORY_EMOJIS = [
-  { emoji: '🍺', label: 'Bares' },
-  { emoji: '🍔', label: 'Restaurantes' },
-  { emoji: '🛒', label: 'Supermercado' },
-  { emoji: '🏠', label: 'Vivienda' },
-  { emoji: '🚗', label: 'Transporte' },
-  { emoji: '🎬', label: 'Ocio' },
-  { emoji: '🩹', label: 'Salud' },
-  { emoji: '🧼', label: 'Limpieza' },
-  { emoji: '👕', label: 'Ropa' },
-  { emoji: '📚', label: 'Educación' },
-  { emoji: '💵', label: 'Pagos' },
-  { emoji: '💰', label: 'Otros' },
+const getCategoryEmojis = (t: (key: string) => string) => [
+  { emoji: '🍺', label: t('categories.bars') },
+  { emoji: '🍔', label: t('categories.restaurants') },
+  { emoji: '🛒', label: t('categories.groceries') },
+  { emoji: '🏠', label: t('categories.housing') },
+  { emoji: '🚗', label: t('categories.transport') },
+  { emoji: '🎬', label: t('categories.entertainment') },
+  { emoji: '🩹', label: t('categories.health') },
+  { emoji: '🧼', label: t('categories.cleaning') },
+  { emoji: '👕', label: t('categories.clothing') },
+  { emoji: '📚', label: t('categories.education') },
+  { emoji: '💵', label: t('categories.payments') },
+  { emoji: '💰', label: t('categories.other') },
 ];
 
 const AddEditExpenseScreen = () => {
@@ -37,7 +38,8 @@ const AddEditExpenseScreen = () => {
   const expenseId = params.expenseId as string | undefined;
   const { groups, addExpense, updateExpense, removeExpense } = useGroupStore();
   const { colors } = useTheme();
-
+  const { t } = useTranslation();
+  const CATEGORY_EMOJIS = getCategoryEmojis(t);
   const group = groupId ? groups.find((g) => g.id === groupId) : undefined;
   const isEdit = Boolean(expenseId);
 
@@ -80,23 +82,23 @@ const AddEditExpenseScreen = () => {
 
   const handleAddExpense = () => {
     if (!groupId || !group) {
-      Alert.alert('Error', 'Grupo no encontrado');
+      Alert.alert( t('alert.error'), 'Grupo no encontrado');
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert('Error', 'Por favor ingresa una descripción');
+      Alert.alert( t('alert.error'), t('expenses.noDescription') );
       return;
     }
 
     const amount = parseFloat(parseFloat(amountText || '0').toFixed(2));
     if (!amount || amount <= 0) {
-      Alert.alert('Error', 'Por favor ingresa un importe válido');
+      Alert.alert( t('alert.error'), 'Por favor ingresa un importe válido');
       return;
     }
 
     if (!paidBy) {
-      Alert.alert('Error', 'Selecciona quién pagó');
+      Alert.alert( t('alert.error'), 'Selecciona quién pagó');
       return;
     }
 
@@ -118,13 +120,13 @@ const AddEditExpenseScreen = () => {
     } else {
       addExpense(groupId, expense as any);
     }
-    Alert.alert('Éxito', 'Gasto añadido');
+    Alert.alert(t('alert.success'), 'Gasto añadido');
     router.back();
   };
 
   const handleDeleteExpense = () => {
     if (!groupId || !expenseId) {
-      Alert.alert('Error', 'No se pudo eliminar el gasto. Inténtalo de nuevo.');
+      Alert.alert( t('expenses.error'), 'No se pudo eliminar el gasto. Inténtalo de nuevo.');
       return;
     }
 
@@ -132,9 +134,9 @@ const AddEditExpenseScreen = () => {
       'Eliminar gasto',
       '¿Estás seguro de que quieres eliminar este gasto?',
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('expenses.cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('expenses.delete'),
           style: 'destructive',
           onPress: () => {
             removeExpense(groupId, expenseId);
@@ -148,7 +150,7 @@ const AddEditExpenseScreen = () => {
   if (!group) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
-        <ThemedText style={{ color: colors.text, margin: 16 }}>Grupo no encontrado</ThemedText>
+        <ThemedText style={{ color: colors.text, margin: 16 }}>{t('expenses.groupNotFound')}</ThemedText>
       </SafeAreaView>
     );
   }
@@ -181,15 +183,15 @@ const AddEditExpenseScreen = () => {
 
   return (
     <>
-      <Stack.Screen options={{ title: isEdit ? 'Editar gasto' : 'Añadir gasto' }} />
+      <Stack.Screen options={{ title: isEdit ? t('expenses.edit') : t('expenses.add') }} />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.descriptionAndCategoryRow}>
             <View style={styles.descriptionSection}>
-              <ThemedText style={[styles.label, { color: colors.text }]}>Descripción</ThemedText>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('expenses.description')}</ThemedText>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
-                placeholder="Ej: Cena en Roma"
+                placeholder={t('expenses.descriptionPlaceholder')}
                 placeholderTextColor={colors.muted}
                 value={description}
                 onChangeText={setDescription}
@@ -197,7 +199,7 @@ const AddEditExpenseScreen = () => {
             </View>
 
             <View style={styles.categorySection}>
-              <ThemedText style={[styles.label, { color: colors.text }]}>Categoría</ThemedText>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('expenses.category')}</ThemedText>
               <TouchableOpacity
                 style={[
                   styles.categorySelectorCompact,
@@ -215,56 +217,61 @@ const AddEditExpenseScreen = () => {
 
           {showCategorySelector && renderCategoryGrid()}
 
-          <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Importe</ThemedText>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
-              placeholder="0.00"
-              placeholderTextColor={colors.muted}
-              value={amountText}
-              onChangeText={handleAmountChange}
-              keyboardType="decimal-pad"
-            />
-          </View>
-
-          <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>
-              Divisa: <ThemedText style={{ fontWeight: '400', color: colors.primary }}>{group.currency ?? 'EUR'}</ThemedText>
-            </ThemedText>
-          </View>
-
-          <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Fecha</ThemedText>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.muted}
-              value={dateText}
-              onChangeText={setDateText}
-            />
-          </View>
-
-          <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Pagado por</ThemedText>
-            <TouchableOpacity
-              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' }]}
-              onPress={() => setShowPayerSelector(!showPayerSelector)}
-            >
-              <Text style={{ color: colors.text }}>{group.members.find((m) => m.id === paidBy)?.name ?? 'Seleccionar'}</Text>
-            </TouchableOpacity>
-            {showPayerSelector && (
-              <View style={{ marginTop: 8 }}>
-                {group.members.map((member) => (
-                  <TouchableOpacity key={member.id} style={styles.payerOption} onPress={() => { setPaidBy(member.id); setShowPayerSelector(false); }}>
-                    <Text style={{ color: colors.text }}>{member.name}</Text>
-                  </TouchableOpacity>
-                ))}
+          {/* Amount and Currency in one row */}
+          <View style={styles.twoColumnRow}>
+            <View style={styles.formColumnWide}>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('expenses.amount')}</ThemedText>
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
+                placeholder="0.00"
+                placeholderTextColor={colors.muted}
+                value={amountText}
+                onChangeText={handleAmountChange}
+                keyboardType="decimal-pad"
+              />
+            </View>
+            <View style={styles.formColumnNarrow}>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('expenses.currency')}</ThemedText>
+              <View style={[styles.currencyDisplay, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                <ThemedText style={{ fontWeight: '600', color: colors.primary }}>{group.currency ?? 'EUR'}</ThemedText>
               </View>
-            )}
+            </View>
           </View>
 
+          {/* PaidBy and Date in one row */}
+          <View style={styles.twoColumnRow}>
+            <View style={styles.formColumn}>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('expenses.paidBy')}</ThemedText>
+              <TouchableOpacity
+                style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' }]}
+                onPress={() => setShowPayerSelector(!showPayerSelector)}
+              >
+                <Text style={{ color: colors.text }}>{group.members.find((m) => m.id === paidBy)?.name ?? 'Seleccionar'}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.formColumn}>
+              <ThemedText style={[styles.label, { color: colors.text }]}>{t('expenses.date')}</ThemedText>
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.muted}
+                value={dateText}
+                onChangeText={setDateText}
+              />
+            </View>
+          </View>
+          {showPayerSelector && (
+            <View style={{ marginBottom: 16, marginLeft: 0, marginRight: 0 }}>
+              {group.members.map((member) => (
+                <TouchableOpacity key={member.id} style={[styles.payerOption, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={() => { setPaidBy(member.id); setShowPayerSelector(false); }}>
+                  <Text style={{ color: colors.text }}>{member.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
           <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: colors.text }]}>Dividir para</ThemedText>
+            <ThemedText style={[styles.label, { color: colors.text }]}>{t('expenses.splitAmong')}</ThemedText>
             {group.members.map((member) => {
               const checked = selectedMembers.includes(member.id);
               return (
@@ -291,14 +298,14 @@ const AddEditExpenseScreen = () => {
             style={[styles.createButton, { backgroundColor: colors.primary }]}
             onPress={handleAddExpense}
           >
-            <ThemedText style={styles.createButtonText}>{isEdit ? 'Guardar cambios' : 'Añadir gasto'}</ThemedText>
+            <ThemedText style={styles.createButtonText}>{isEdit ? t('expenses.saveChanges') : t('expenses.add')}</ThemedText>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => router.back()}
           >
-            <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>Cancelar</ThemedText>
+            <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>{t('expenses.cancel')}</ThemedText>
           </TouchableOpacity>
 
           {isEdit && (
@@ -306,7 +313,7 @@ const AddEditExpenseScreen = () => {
               style={[styles.deleteButton, { backgroundColor: '#ef4444' }]}
               onPress={handleDeleteExpense}
             >
-              <ThemedText style={styles.deleteButtonText}>Eliminar gasto</ThemedText>
+              <ThemedText style={styles.deleteButtonText}>{t('expenses.delete')}</ThemedText>
             </TouchableOpacity>
           )}
         </ScrollView>
@@ -367,7 +374,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
-  currencyButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, marginRight: 8, marginBottom: 8 },
+  twoColumnRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  formColumn: {
+    flex: 1,
+  },
+  formColumnWide: {
+    flex: 2,
+  },
+  formColumnNarrow: {
+    width: 100,
+  },
+  currencyDisplay: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   payerOption: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, marginBottom: 8 },
   createButton: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', marginBottom: 12 },
   createButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },

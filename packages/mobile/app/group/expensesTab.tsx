@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useTheme } from '@/src/contexts/ThemeContext';
@@ -30,12 +30,19 @@ interface ExpensesTabProps {
 }
 
 const tabStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   tabContent: {
     padding: 16,
-    position: 'relative',
   },
-  expensesList: {
-    marginBottom: 24,
+  expensesList: {},
+  dateHeader: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
+    marginTop: 8,
   },
   expenseCard: {
     backgroundColor: '#fff',
@@ -78,25 +85,6 @@ const tabStyles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
   },
-  fabButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  fabButtonText: {
-    fontSize: 28,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
 });
 
 export const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
@@ -111,39 +99,87 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
     router.push(`./addEditExpense?groupId=${group.id}&expenseId=${expenseId}`);
   };
 
-  return (
-    <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
-      <View style={tabStyles.expensesList}>
-        {group.expenses.map((expense) => (
-          <TouchableOpacity
-            key={expense.id}
-            onPress={() => handleExpensePress(expense.id)}
-            style={[tabStyles.expenseCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            <View style={tabStyles.expenseHeader}>
-              <View style={tabStyles.expenseDescriptionRow}>
-                <ThemedText style={tabStyles.expenseCategory}>
-                  {expense.category || '💰'}
-                </ThemedText>
-                <ThemedText style={[tabStyles.expenseDescription, { color: colors.text }]}>
-                  {expense.description}
-                </ThemedText>
-              </View>
-              <ThemedText style={[tabStyles.expenseAmount, { color: colors.primary }]}>
-                €{expense.amount.toFixed(2)}
-              </ThemedText>
-            </View>
-            <ThemedText style={[tabStyles.expenseDetail, { color: colors.muted }]}>
-              {getMemberName(expense.paidBy)} · Hace{' '}
-              {Math.round((Date.now() - new Date(expense.date).getTime()) / (1000 * 60 * 60))}h
-            </ThemedText>
-          </TouchableOpacity>
-        ))}
-      </View>
+  // Sort expenses by date (most recent first) and group by date
+  const getGroupedExpenses = () => {
+    const sorted = [...group.expenses].sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 
-      <TouchableOpacity style={[tabStyles.fabButton, { backgroundColor: colors.primary }]} onPress={onAdd}>
-        <ThemedText style={tabStyles.fabButtonText}>+</ThemedText>
-      </TouchableOpacity>
+    let currentGroup: { date: string; label: string; expenses: typeof sorted } | null = null;
+    const result: Array<{ date: string; label: string; expenses: typeof sorted }> = [];
+
+    sorted.forEach((expense) => {
+      const dateObj = new Date(expense.date);
+      const dateKey = dateObj.toISOString().split('T')[0];
+      
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      let label: string;
+      if (dateObj.toDateString() === today.toDateString()) {
+        label = 'Hoy';
+      } else if (dateObj.toDateString() === yesterday.toDateString()) {
+        label = 'Ayer';
+      } else {
+        label = dateKey; // Use YYYY-MM-DD format
+      }
+
+      if (!currentGroup || dateKey !== currentGroup.date) {
+        currentGroup = { date: dateKey, label, expenses: [] };
+        result.push(currentGroup);
+      }
+      currentGroup.expenses.push(expense);
+    });
+
+    return result;
+  };
+
+  const groupedExpenses = getGroupedExpenses();
+
+  return (
+    <View style={[tabStyles.container, { backgroundColor: colors.background }]}>
+      <ScrollView style={tabStyles.tabContent}>
+        <View style={tabStyles.expensesList}>
+          {groupedExpenses.length === 0 ? (
+            <ThemedText style={[tabStyles.expenseDetail, { color: colors.muted, textAlign: 'center', marginTop: 20 }]}>
+              No hay gastos registrados aún
+            </ThemedText>
+          ) : (
+            groupedExpenses.map((group) => (
+              <View key={group.date}>
+                <ThemedText style={[tabStyles.dateHeader, { color: colors.text }]}>
+                  {group.label}
+                </ThemedText>
+                {group.expenses.map((expense) => (
+                  <TouchableOpacity
+                    key={expense.id}
+                    onPress={() => handleExpensePress(expense.id)}
+                    style={[tabStyles.expenseCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  >
+                    <View style={tabStyles.expenseHeader}>
+                      <View style={tabStyles.expenseDescriptionRow}>
+                        <ThemedText style={tabStyles.expenseCategory}>
+                          {expense.category || '💰'}
+                        </ThemedText>
+                        <ThemedText style={[tabStyles.expenseDescription, { color: colors.text }]}>
+                          {expense.description}
+                        </ThemedText>
+                      </View>
+                      <ThemedText style={[tabStyles.expenseAmount, { color: colors.primary }]}>
+                        €{expense.amount.toFixed(2)}
+                      </ThemedText>
+                    </View>
+                    <ThemedText style={[tabStyles.expenseDetail, { color: colors.muted }]}>
+                      {getMemberName(expense.paidBy)}
+                    </ThemedText>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 };

@@ -37,10 +37,15 @@
     "noGroups": "No tienes grupos aún",
     "createOrJoin": "Crea un grupo o únete a uno existente"
   },
+  "alert": {
+    "error":"Error",
+    "success":"Éxito"
+  },
   "createEditGroup": {
     "create": "Crear nuevo grupo",
     "edit": "Editar grupo",
     "delete": "Eliminar grupo",
+    "cancel": "Cancelar",
     "groupName": "Nombre del grupo",
     "namePlaceholder": "Ej: Viaje Roma",
     "icon": "Icono",
@@ -60,10 +65,8 @@
     "groupCreated": "Grupo creado correctamente",
     "groupNotFound": "Grupo no encontrado",
     "deleteConfirm": "¿Estás seguro de que quieres eliminar este grupo? Solo se eliminará de tu dispositivo local, no del servidor.",
-    "error": "Error",
     "emptyName": "Por favor ingresa el nombre del grupo",
-    "noParticipants": "Por favor agrega al menos un participante",
-    "success": "Éxito"
+    "noParticipants": "Por favor agrega al menos un participante"
   },
   "tabs": {
     "expenses": "Gastos",
@@ -75,6 +78,7 @@
     "add": "Añadir gasto",
     "edit": "Editar gasto",
     "delete": "Eliminar gasto",
+    "cancel": "Cancelar",
     "description": "Descripción",
     "descriptionPlaceholder": "Ej: Cena en Roma",
     "category": "Categoría",
@@ -82,14 +86,12 @@
     "currency": "Divisa",
     "date": "Fecha",
     "paidBy": "Pagado por",
-    "selectPayer": "Seleccionar",
-    "sharedBy": "Dividir para",
+    "splitAmong": "Dividir para",
     "addGroupExpense": "Añadir gasto al grupo",
     "saveChanges": "Guardar cambios",
     "deleteConfirm": "¿Estás seguro de que quieres eliminar este gasto?",
     "added": "Gasto añadido",
     "updated": "Gasto actualizado",
-    "error": "Error",
     "noDescription": "Por favor ingresa una descripción",
     "invalidAmount": "Por favor ingresa un importe válido",
     "selectWhoPaid": "Selecciona quién pagó",
@@ -130,6 +132,7 @@
     "descriptionPlaceholder": "Ej: Lavó los platos",
     "madeBy": "Hecho por",
     "selectMaker": "Seleccionar",
+    "date": "Fecha",
     "useAI": "Utilizar IA",
     "manualScore": "Puntuación manual",
     "save": "Guardar favor",

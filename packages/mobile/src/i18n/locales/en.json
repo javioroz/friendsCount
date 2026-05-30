@@ -37,10 +37,15 @@
     "noGroups": "You don't have groups yet",
     "createOrJoin": "Create a group or join an existing one"
   },
+  "alert": {
+    "error":"Error",
+    "success":"Success"
+  },
   "createEditGroup": {
     "create": "Create new group",
     "edit": "Edit group",
     "delete": "Delete group",
+    "cancel": "Cancel",
     "groupName": "Group name",
     "namePlaceholder": "E.g.: Rome Trip",
     "icon": "Icon",
@@ -60,10 +65,8 @@
     "groupCreated": "Group created successfully",
     "groupNotFound": "Group not found",
     "deleteConfirm": "Are you sure you want to delete this group? It will only be deleted from your local device, not from the server.",
-    "error": "Error",
     "emptyName": "Please enter the group name",
-    "noParticipants": "Please add at least one participant",
-    "success": "Success"
+    "noParticipants": "Please add at least one participant"
   },
   "tabs": {
     "expenses": "Expenses",
@@ -75,6 +78,7 @@
     "add": "Add expense",
     "edit": "Edit expense",
     "delete": "Delete expense",
+    "cancel": "Cancelar",
     "description": "Description",
     "descriptionPlaceholder": "E.g.: Dinner in Rome",
     "category": "Category",
@@ -82,14 +86,12 @@
     "currency": "Currency",
     "date": "Date",
     "paidBy": "Paid by",
-    "selectPayer": "Select",
-    "sharedBy": "Split among",
+    "splitAmong": "Split among",
     "addGroupExpense": "Add expense to group",
     "saveChanges": "Save changes",
     "deleteConfirm": "Are you sure you want to delete this expense?",
     "added": "Expense added",
     "updated": "Expense updated",
-    "error": "Error",
     "noDescription": "Please enter a description",
     "invalidAmount": "Please enter a valid amount",
     "selectWhoPaid": "Select who paid",
@@ -130,6 +132,7 @@
     "descriptionPlaceholder": "E.g.: Washed the dishes",
     "madeBy": "Made by",
     "selectMaker": "Select",
+    "date": "Date",
     "useAI": "Use AI",
     "manualScore": "Manual score",
     "save": "Save favor",

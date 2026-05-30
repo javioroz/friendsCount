@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useTheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface Member {
   id: string;
@@ -193,6 +194,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isInfoModalVisible, setIsInfoModalVisible] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const getMemberName = (memberId: string) => {
     return group.members.find((m) => m.id === memberId)?.name || 'Unknown';
@@ -387,7 +389,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }
       <View style={[tabStyles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {/* Info Section */}
         <View style={tabStyles.sectionHeader}>
-          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>¿A quién le toca la proxima tarea?</ThemedText>
+          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>{t('rankings.nextTask')}</ThemedText>
           <TouchableOpacity onPress={openInfoModal} style={tabStyles.infoIcon}>
             <ThemedText style={[tabStyles.infoIconText, { color: colors.primary }]}>ℹ️</ThemedText>
           </TouchableOpacity>
@@ -397,7 +399,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }
           style={[tabStyles.raffleButton, { backgroundColor: colors.primary }]}
           onPress={performRaffle}
         >
-          <ThemedText style={tabStyles.raffleButtonText}>🎲 Iniciar sorteo</ThemedText>
+          <ThemedText style={tabStyles.raffleButtonText}>{t('rankings.startRaffle')}</ThemedText>
         </TouchableOpacity>
       </View>
       {/* Raffle Result Modal */}

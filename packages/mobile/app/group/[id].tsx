@@ -122,6 +122,16 @@ const GroupScreen = () => {
             )}
           </ScrollView>
 
+          {/* Floating Action Button for Expenses and Favors tabs */}
+          {(activeTab === 'expenses' || activeTab === 'favors') && (
+            <TouchableOpacity
+              style={[styles.fabButton, { backgroundColor: colors.primary }]}
+              onPress={activeTab === 'expenses' ? handleAddExpense : handleAddFavor}
+            >
+              <ThemedText style={styles.fabButtonText}>+</ThemedText>
+            </TouchableOpacity>
+          )}
+
           {/* Floating Bottom Tab Bar */}
           <View style={[styles.bottomTabBar, { backgroundColor: colors.surface + 'E6' }]}>
             {(['expenses', 'balances', 'favors', 'rankings'] as TabType[]).map((tab) => (
@@ -220,6 +230,25 @@ const styles = StyleSheet.create({
   bottomTabButtonText: {
     fontSize: 10,
     marginTop: 4,
+  },
+  fabButton: {
+    position: 'absolute',
+    bottom: 140,
+    right: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  fabButtonText: {
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   groupHeaderLeft: {
     flexDirection: 'row',
