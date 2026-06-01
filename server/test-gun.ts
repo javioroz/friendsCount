@@ -1,4 +1,4 @@
-// En packages/server, crea test-gun.js:
+// En server, crea test-gun.js:
 const Gun = require('gun');
 const gun = Gun('ws://localhost:3001/gun');
 

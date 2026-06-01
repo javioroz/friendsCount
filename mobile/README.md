@@ -5,7 +5,7 @@ App multiplataforma de gestión de gastos compartidos con sistema de favores pon
 ## Estructura del proyecto
 
 ```
-packages/mobile/
+mobile/
 ├── app/                          # Rutas de Expo Router
 │   ├── _layout.tsx               # Layout principal
 │   ├── index.tsx                 # Pantalla: Lista de grupos
@@ -44,7 +44,7 @@ packages/mobile/
 ## Instalación
 
 ```bash
-cd packages/mobile
+cd mobile
 npm install
 ```
 

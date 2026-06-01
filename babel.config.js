@@ -6,9 +6,9 @@ module.exports = function (api) {
       [
         'module-resolver',
         {
-          root: ['./packages/mobile'],
+          root: ['./mobile'],
           alias: {
-            '@': './packages/mobile',
+            '@': './mobile',
           },
         },
       ],

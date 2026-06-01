@@ -20,18 +20,17 @@ Es una aplicación multiplataforma (Android, iOS, Web) para gestionar gastos com
 
 ```
 friendsCount/
-├── packages/
-│   ├── mobile/          # React Native + Expo + lógica y stores
-│   │   ├── app/         # Pantallas (Expo Router)
-│   │   ├── src/
-│   │   │   ├── stores/      # Zustand stores
-│   │   │   ├── services/    # GunDB y sincronización
-│   │   │   ├── types/       # Tipos TypeScript
-│   │   │   ├── components/  # Componentes reutilizables
-│   │   │   └── contexts/    # Contextos React (Theme)
-│   │   └── assets/      # Recursos (imágenes, iconos)
-│   └── server/          # GunDB relay server
-│       └── src/         # Servidor Express + GunDB
+├── mobile/              # React Native + Expo + lógica y stores
+│   ├── app/             # Pantallas (Expo Router)
+│   ├── src/
+│   │   ├── stores/      # Zustand stores
+│   │   ├── services/    # GunDB y sincronización
+│   │   ├── types/       # Tipos TypeScript
+│   │   ├── components/  # Componentes reutilizables
+│   │   └── contexts/    # Contextos React (Theme)
+│   └── assets/          # Recursos (imágenes, iconos)
+├── server/              # GunDB relay server
+│   └── src/             # Servidor Express + GunDB
 ├── .gitignore
 ├── README.md
 └── package.json         # Root workspace (npm workspaces)
@@ -133,13 +132,13 @@ Abre en:
 
 ### 4. Configurar variables de entorno
 
-Copia el archivo `.env` de ejemplo en `packages/mobile/`:
+Copia el archivo `.env` de ejemplo en `mobile/`:
 
 ```bash
-cp packages/mobile/.env packages/mobile/.env.local
+cp mobile/.env mobile/.env.local
 ```
 
-Edita `packages/mobile/.env.local`:
+Edita `mobile/.env.local`:
 ```env
 EXPO_PUBLIC_GUN_RELAY=ws://localhost:3001/gun
 ```
@@ -170,12 +169,12 @@ Para eliminar todas las carpetas `node_modules` y archivos de build:
 
 ```bash
 # Eliminar node_modules en todos los workspaces
-rm -rf node_modules packages/*/node_modules
+rm -rf node_modules mobile/node_modules server/node_modules
 
 # Eliminar builds
-rm -rf packages/server/dist
-rm -rf packages/mobile/web-build
-rm -rf packages/mobile/.expo
+rm -rf server/dist
+rm -rf mobile/web-build
+rm -rf mobile/.expo
 
 # Reinstalar dependencias
 npm install
@@ -187,8 +186,8 @@ npm install
 
 El proyecto usa npm workspaces. Cada paquete tiene su propio `package.json`:
 
-- `packages/mobile/package.json` - Dependencias de la app móvil
-- `packages/server/package.json` - Dependencias del servidor
+- `mobile/package.json` - Dependencias de la app móvil
+- `server/package.json` - Dependencias del servidor
 
 El `package.json` raíz define los workspaces y comandos globales.
 
@@ -196,13 +195,13 @@ El `package.json` raíz define los workspaces y comandos globales.
 
 ```bash
 # Para mobile
-npm install <paquete> --workspace=packages/mobile
+npm install <paquete> --workspace=mobile
 
 # Para server
-npm install <paquete> --workspace=packages/server
+npm install <paquete> --workspace=server
 
 # Para todos
-npm install <paquete> --workspace=packages/mobile --workspace=packages/server
+npm install <paquete> --workspace=mobile --workspace=server
 ```
 
 ## 📱 Uso de la Aplicación
