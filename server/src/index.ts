@@ -59,7 +59,7 @@ const server = http.createServer(app);
 
 // Initialize GunDB with WebSocket relay
 const gun = Gun({
-  file: 'data.json', // Persist data to file
+  file: 'radata', // Persist data to radata directory (production-ready)
   web: server as any, // Attach to HTTP server for WebSocket
 });
 
@@ -73,6 +73,7 @@ server.listen(PORT, () => {
   console.log(`🚀 GunDB Relay Server running on port ${PORT}`);
   console.log(`📡 WebSocket endpoint: ws://localhost:${PORT}/gun`);
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 // Handle graceful shutdown

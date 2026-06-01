@@ -32,7 +32,8 @@ coverage/
 .env.development.local
 .env.test.local
 .env.production.local
-.env*.example
+.env.production
+
 
 # Logs
 npm-debug.log*
@@ -55,8 +56,8 @@ Thumbs.db
 *.sublime-workspace
 
 # GunDB data (local persistence)
-packages/server/data.json/
-packages/server/radata/
+server/data.json/
+server/radata/
 
 # Temporary files
 *.tmp
@@ -64,8 +65,8 @@ packages/server/radata/
 .cache/
 
 # Lock files (keep only root package-lock.json)
-packages/mobile/package-lock.json
-packages/server/package-lock.json
+mobile/package-lock.json
+server/package-lock.json
 
 # Backup files
 *.bak
