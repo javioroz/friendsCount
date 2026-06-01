@@ -4,36 +4,6 @@ Aplicación de gestión de gastos compartidos con favores puntuados por IA. Simi
 
 Es una aplicación multiplataforma (Android, iOS, Web) para gestionar gastos compartidos entre amigos, que también incluye funcionalidad para registrar favores hechos por cada miembro del grupo y realizar una clasificación de amistad basada en ellos.
 
-## ✨ Funcionalidades Implementadas
-
-### ✅ Completadas
-- **Gestión de Grupos**: Crear, editar y unirse a grupos
-- **Gastos Compartidos**: 
-  - Añadir, editar y eliminar gastos con cálculo automático de balances
-  - **Categorización con emojis** (🍺 Bares, 🍔 Restaurantes, 🛒 Supermercado, 🏠 Vivienda, 🚗 Transporte, 🎬 Ocio, 🩹 Salud, 🧼 Limpieza, 👕 Ropa, 📚 Educación, 💵 Pagos, 💰 Otros)
-  - Visualización de categoría en lista de gastos
-- **Saldos y Liquidación**: 
-  - Visualización de balances individuales
-  - Liquidación óptima con algoritmo greedy
-  - Creación automática de gastos de liquidación con categoría 💵 "Pagos"
-  - **Filtrado de gastos por miembro**: Al hacer clic en un miembro, se muestra su lista de gastos
-- **Favores con IA**: 
-  - Registro de favores con puntuación manual o automática por IA
-  - **Integración con LLMs** (OpenAI-compatible) para evaluación automática
-  - Configuración de API Key, modelo y endpoint personalizado por grupo
-  - Respuesta de IA con puntuación, mensaje personalizado y apodo
-- **Clasificación**: 
-  - Ranking de miembros por puntuación con apodos automáticos
-  - **Filtrado de favores por miembro**: Al hacer clic en un miembro, se muestra su lista de favores
-  - Visualización de detalles de IA cuando corresponde
-- **Sorteo** ponderado para asignar tareas
-- **Sincronización P2P**: GunDB para sincronización en tiempo real entre clientes
-- **Tema Claro/Oscuro**: Soporte completo para modo oscuro
-- **Icono de la App**: friendsCount_logo_light.png como icono principal en todas las plataformas
-
-### 🚧 En Desarrollo
-- API REST con Fastify
-- Persistencia en PostgreSQL
 
 ## 🛠 Stack Tecnológico
 
@@ -272,10 +242,43 @@ npm install <paquete> --workspace=packages/mobile --workspace=packages/server
 4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
 5. Abre un Pull Request
 
-## 📄 Licencia
+---
 
-MIT
+## ✨ Funcionalidades Implementadas
+
+### ✅ Completadas
+- **Gestión de Grupos**: Crear, editar y unirse a grupos
+- **Gastos Compartidos**: 
+  - Añadir, editar y eliminar gastos con cálculo automático de balances
+  - **Categorización con emojis** (🍺 Bares, 🍔 Restaurantes, 🛒 Supermercado, 🏠 Vivienda, 🚗 Transporte, 🎬 Ocio, 🩹 Salud, 🧼 Limpieza, 👕 Ropa, 📚 Educación, 💵 Pagos, 💰 Otros)
+  - Visualización de categoría en lista de gastos
+- **Saldos y Liquidación**: 
+  - Visualización de balances individuales
+  - Liquidación óptima con algoritmo greedy
+  - Creación automática de gastos de liquidación con categoría 💵 "Pagos"
+  - **Filtrado de gastos por miembro**: Al hacer clic en un miembro, se muestra su lista de gastos
+- **Favores con IA**: 
+  - Registro de favores con puntuación manual o automática por IA
+  - **Integración con LLMs** (OpenAI-compatible) para evaluación automática
+  - Configuración de API Key, modelo y endpoint personalizado por grupo
+  - Respuesta de IA con puntuación, mensaje personalizado y apodo
+- **Clasificación**: 
+  - Ranking de miembros por puntuación con apodos automáticos
+  - **Filtrado de favores por miembro**: Al hacer clic en un miembro, se muestra su lista de favores
+  - Visualización de detalles de IA cuando corresponde
+- **Sorteo** ponderado para asignar tareas
+- **Sincronización P2P**: GunDB para sincronización en tiempo real entre clientes
+- **Tema Claro/Oscuro**: Soporte completo para modo oscuro
+- **Icono de la App**: friendsCount_logo_light.png como icono principal en todas las plataformas
+
+### 🚧 En Desarrollo
+- API REST con Fastify
+- Persistencia en PostgreSQL
+
+**Nota**: Este proyecto está en desarrollo activo. Algunas funcionalidades pueden estar incompletas o cambiar en el futuro.
 
 ---
 
-**Nota**: Este proyecto está en desarrollo activo. Algunas funcionalidades pueden estar incompletas o cambiar en el futuro.
+## 📄 Licencia
+
+GNU GPL v3.0 

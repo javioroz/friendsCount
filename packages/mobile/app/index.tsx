@@ -31,19 +31,19 @@ const GroupsScreen = () => {
     if (!hasInitialized && groups.length === 0) {
       const mockGroups: Group[] = [
         {
-          id: 'group1',
-          name: 'Viaje de amigos',
+          id: 'mock_group1',
+          name: 'Viaje de amigos (ejemplo)',
           icon: '🚗',
           currency: 'EUR',
           members: [
             { id: 'user1', name: 'Carlos', email: 'carlos@example.com' },
-            { id: 'user2', name: 'Marta', email: 'marta@example.com' },
-            { id: 'user3', name: 'Luis', email: 'luis@example.com' },
+            { id: 'user2', name: 'Alberto', email: 'alberto@example.com' },
+            { id: 'user3', name: 'Elisa', email: 'elisa@example.com' },
           ],
           expenses: [
             {
               id: 'exp1',
-              groupId: 'group1',
+              groupId: 'mock_group1',
               description: 'Cena en trattoria',
               amount: 45.5,
               paidBy: 'user1',
@@ -53,7 +53,7 @@ const GroupsScreen = () => {
             },
             {
               id: 'exp2',
-              groupId: 'group1',
+              groupId: 'mock_group1',
               description: 'Taxi al aeropuerto',
               amount: 23.0,
               paidBy: 'user2',
@@ -65,7 +65,7 @@ const GroupsScreen = () => {
           favors: [
             {
               id: 'favor1',
-              groupId: 'group1',
+              groupId: 'mock_group1',
               description: 'Fregó el baño a las 3am',
               madeBy: 'user1',
               date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -77,7 +77,7 @@ const GroupsScreen = () => {
             },
             {
               id: 'favor2',
-              groupId: 'group1',
+              groupId: 'mock_group1',
               description: 'Hizo la comida',
               madeBy: 'user2',
               date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -95,42 +95,7 @@ const GroupsScreen = () => {
             { memberId: 'user3', nickname: 'El Nuevo', score: 0 },
           ],
           createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'group2',
-          name: 'Piso compartido',
-          icon: '🏠',
-          currency: 'EUR',
-          members: [
-            { id: 'user1', name: 'Carlos', email: 'carlos@example.com' },
-            { id: 'user4', name: 'Sofia', email: 'sofia@example.com' },
-            { id: 'user5', name: 'Pablo', email: 'pablo@example.com' },
-          ],
-          expenses: [
-            {
-              id: 'exp3',
-              groupId: 'group2',
-              description: 'Alquiler',
-              amount: 900.0,
-              paidBy: 'user4',
-              sharedBy: ['user1', 'user4', 'user5'],
-              date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-              category: '🏠',
-            },
-          ],
-          favors: [],
-          balances: [
-            { memberId: 'user1', amount: -300 },
-            { memberId: 'user4', amount: 600 },
-            { memberId: 'user5', amount: -300 },
-          ],
-          rankings: [
-            { memberId: 'user1', nickname: 'El Silencioso', score: 100 },
-            { memberId: 'user4', nickname: 'La Pagadora', score: 200 },
-            { memberId: 'user5', nickname: 'El Ocupado', score: 80 },
-          ],
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        },
+        }
       ];
       
       mockGroups.forEach((group) => {

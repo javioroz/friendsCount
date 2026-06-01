@@ -54,7 +54,6 @@ const AddEditExpenseScreen = () => {
 
   useEffect(() => {
     if (group) {
-      if (group.members.length > 0) setPaidBy(group.members[0].id);
       setSelectedMembers(group.members.map((m) => m.id));
     }
 
@@ -71,6 +70,7 @@ const AddEditExpenseScreen = () => {
     } else {
       // default date to today
       setDateText(new Date().toISOString().split('T')[0]);
+      // paidBy stays null (empty) for new expenses
     }
   }, [group, isEdit, expenseId]);
 

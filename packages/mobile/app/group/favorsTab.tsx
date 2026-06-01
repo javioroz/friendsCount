@@ -61,31 +61,29 @@ const tabStyles = StyleSheet.create({
     elevation: 1,
   },
   favorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
+  },
+  favorDescriptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   favorDescription: {
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
   },
+  favorScore: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
   favorDetail: {
     fontSize: 12,
     color: '#999',
     marginBottom: 4,
-  },
-  scoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 6,
-  },
-  scoreLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  scoreValue: {
-    fontSize: 14,
-    fontWeight: '700',
   },
   aiResponse: {
     backgroundColor: '#f0f4ff',
@@ -171,41 +169,43 @@ export const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
                 <ThemedText style={[tabStyles.dateHeader, { color: colors.text }]}>
                   {group.label}
                 </ThemedText>
-                {group.favors.map((favor) => (
-                  <TouchableOpacity
-                    key={favor.id}
-                    onPress={() => handleFavorPress(favor.id)}
-                    style={[tabStyles.favorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  >
-                    <View style={tabStyles.favorHeader}>
-                      <ThemedText style={[tabStyles.favorDescription, { color: colors.text }]}>
-                        🌟 {favor.description}
-                      </ThemedText>
-                    </View>
-                    <ThemedText style={[tabStyles.favorDetail, { color: colors.muted }]}>
-                      Por: {getMemberName(favor.madeBy)}
-                    </ThemedText>
-                    <View style={tabStyles.scoreContainer}>
-                      <ThemedText style={[tabStyles.scoreLabel, { color: colors.muted }]}>
-                        Puntuación:
-                      </ThemedText>
-                      <ThemedText style={[tabStyles.scoreValue, { color: colors.primary }]}>
-                        {favor.aiResponse?.score !== undefined 
-                          ? (favor.aiResponse.score > 0 ? `+${favor.aiResponse.score}` : `${favor.aiResponse.score}`)
-                          : favor.manualScore !== undefined 
-                            ? (favor.manualScore > 0 ? `+${favor.manualScore}` : `${favor.manualScore}`)
-                            : '0'}
-                      </ThemedText>
-                    </View>
-                    {favor.aiResponse && (
-                      <View style={[tabStyles.aiResponse, { borderLeftColor: colors.primary, backgroundColor: colors.surface }]}>
-                        <ThemedText style={[tabStyles.aiMessage, { color: colors.text }]}>
-                          🤖 {favor.aiResponse.message}
+                {group.favors.map((favor) => {
+                  const scoreValue = favor.aiResponse?.score !== undefined 
+                    ? (favor.aiResponse.score > 0 ? `+${favor.aiResponse.score}` : `${favor.aiResponse.score}`)
+                    : favor.manualScore !== undefined 
+                      ? (favor.manualScore > 0 ? `+${favor.manualScore}` : `${favor.manualScore}`)
+                      : '0';
+
+                  return (
+                    <TouchableOpacity
+                      key={favor.id}
+                      onPress={() => handleFavorPress(favor.id)}
+                      style={[tabStyles.favorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    >
+                      <View style={tabStyles.favorHeader}>
+                        <View style={tabStyles.favorDescriptionRow}>
+                          <ThemedText style={{ fontSize: 18, marginRight: 8 }}>🌟</ThemedText>
+                          <ThemedText style={[tabStyles.favorDescription, { color: colors.text }]}>
+                            {favor.description}
+                          </ThemedText>
+                        </View>
+                        <ThemedText style={[tabStyles.favorScore, { color: colors.primary }]}>
+                          {scoreValue}
                         </ThemedText>
                       </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
+                      <ThemedText style={[tabStyles.favorDetail, { color: colors.muted }]}>
+                        Por: {getMemberName(favor.madeBy)}
+                      </ThemedText>
+                      {favor.aiResponse && (
+                        <View style={[tabStyles.aiResponse, { borderLeftColor: colors.primary, backgroundColor: colors.surface }]}>
+                          <ThemedText style={[tabStyles.aiMessage, { color: colors.text }]}>
+                            🤖 {favor.aiResponse.message}
+                          </ThemedText>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             ))
           )}

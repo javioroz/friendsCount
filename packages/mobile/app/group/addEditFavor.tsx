@@ -46,9 +46,6 @@ const AddEditFavorScreen = () => {
   useEffect(() => {
     if (!group) return;
 
-    const defaultMemberId = group.members[0]?.id ?? null;
-    setMadeBy(defaultMemberId);
-
     if (isEditMode && favorId) {
       const favor = group.favors.find((f) => f.id === favorId);
       if (favor) {
@@ -61,6 +58,7 @@ const AddEditFavorScreen = () => {
         }
       }
     }
+    // For new favors, madeBy stays null (empty) until user selects
   }, [group, isEditMode, favorId]);
 
   const handleSaveFavor = async () => {
