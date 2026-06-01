@@ -32,7 +32,8 @@
         {
           "origin": false
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "router": {

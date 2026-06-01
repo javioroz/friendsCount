@@ -16,6 +16,9 @@
     "install:all": "npm install",
     "postinstall": "echo '✅ Instalación completada. Ejecuta: npm run dev:server y npm run dev:mobile'"
   },
+  "overrides": {
+    "@expo/vector-icons": "^15.0.3"
+  },
   "workspaces": [
     "mobile",
     "server"
