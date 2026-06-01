@@ -1,0 +1,7 @@
+{
+  "deploy": {
+    "environment": "production",
+    "builddCommand": "cd packages/server && npm install && npm run build",
+    "startCommand": "cd packages/server && npm start"
+  }
+}
