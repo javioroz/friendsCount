@@ -131,8 +131,8 @@ const AddEditExpenseScreen = () => {
     }
 
     Alert.alert(
-      'Eliminar gasto',
-      '¿Estás seguro de que quieres eliminar este gasto?',
+      t('expenses.deleteTitle'),
+      t('expenses.deleteConfirm'),
       [
         { text: t('expenses.cancel'), style: 'cancel' },
         {

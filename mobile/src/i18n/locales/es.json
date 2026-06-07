@@ -64,6 +64,7 @@
     "settingsSaved": "Ajustes guardados correctamente",
     "groupCreated": "Grupo creado correctamente",
     "groupNotFound": "Grupo no encontrado",
+    "deleteTitle": "Eliminar grupo",
     "deleteConfirm": "¿Estás seguro de que quieres eliminar este grupo? Solo se eliminará de tu dispositivo local, no del servidor.",
     "emptyName": "Por favor ingresa el nombre del grupo",
     "noParticipants": "Por favor agrega al menos un participante"

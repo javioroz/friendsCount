@@ -590,15 +590,22 @@ const CreateEditGroupScreen = () => {
               onPress={() => {
                 console.log('🗑️ Delete button pressed, isEditMode:', isEditMode, 'group:', group?.id);
                 if (group) {
-                  // Use native confirm() for web compatibility
-                  const confirmed = window.confirm(
-                    t('createEditGroup.deleteConfirm')
+                  Alert.alert(
+                    t('createEditGroup.deleteTitle'),
+                    t('createEditGroup.deleteConfirm'),
+                    [
+                      { text: t('createEditGroup.cancel'), style: 'cancel' },
+                      {
+                        text: t('createEditGroup.delete'),
+                        style: 'destructive',
+                        onPress: () => {
+                          console.log('🗑️ Confirmed delete for group:', group.id);
+                          removeGroup(group.id);
+                          router.back();
+                        },
+                      },
+                    ]
                   );
-                  if (confirmed) {
-                    console.log('🗑️ Confirmed delete for group:', group.id);
-                    removeGroup(group.id);
-                    router.back();
-                  }
                 } else {
                   console.log('⚠️ No group found to delete');
                 }
