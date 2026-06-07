@@ -115,7 +115,7 @@ const AppContent = () => {
         <Stack.Screen
           name="index"
           options={{
-            title: 'FriendsCount',
+            title: ' FriendsCount ',
             headerShown: true,
             headerLeft: () => (
               <Image

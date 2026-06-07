@@ -41,7 +41,7 @@ const GroupScreen = () => {
   };
 
   const handleStartRaffle = () => {
-    Alert.alert('Sorteo', 'Eligiendo al miembro más necesitado... 🎲');
+    //Alert.alert('Sorteo', 'Eligiendo al miembro más necesitado... 🎲');
   };
 
   const getTabIcon = (tab: TabType) => {
