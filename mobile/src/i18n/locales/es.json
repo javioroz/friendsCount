@@ -15,10 +15,16 @@
   },
   "settings": {
     "settingsTitle": "Ajustes de la aplicación",
-    "darkMode": "Cambiar modo oscuro / claro",
+    "darkMode": "Modo oscuro",
     "language": "Idioma",
     "developerInfo": "Información sobre el desarrollador:",
-    "developerText": "Esta app fue desarrollada por PiratasLab, si te gusta invítanos a un café."
+    "developerText": "Esta app fue desarrollada por PiratasLab, si te gusta invítanos a un café.",
+    "exportGroups": "Exportar grupos en .json",
+    "export": "Exportar",
+    "exportFailed": "Error al exportar grupos",
+    "exportSuccess": "Exportación exitosa",
+    "exportedToDownloads": "Grupos exportados a la carpeta de Descargas",
+    "checkShareOrDownloads": "Archivo json compartido o descargado con éxito"
   },
   "languages": {
     "es": "Español",

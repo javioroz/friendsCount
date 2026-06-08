@@ -15,10 +15,16 @@
   },
   "settings": {
     "settingsTitle": "App Settings",
-    "darkMode": "Toggle dark / light mode",
+    "darkMode": "Toggle dark mode",
     "language": "Language",
     "developerInfo": "Developer information:",
-    "developerText": "This app was developed by PiratasLab, if you like it buy us a coffee."
+    "developerText": "This app was developed by PiratasLab, if you like it buy us a coffee.",
+    "exportGroups": "Export groups as JSON file",
+    "export": "Export",
+    "exportFailed": "Error exporting groups",
+    "exportSuccess": "Export successful",
+    "exportedToDownloads": "Groups exported to Downloads folder",
+    "checkShareOrDownloads": "JSON file shared or downloaded successfully"
   },
   "languages": {
     "es": "Español",
