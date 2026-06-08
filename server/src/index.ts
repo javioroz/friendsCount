@@ -3,13 +3,53 @@ import http from 'http';
 import cors from 'cors';
 import Gun from 'gun';
 import 'gun/axe';
+import path from 'path';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Create HTTP server early so Gun can attach to it
+const server = http.createServer(app);
+
+// Initialize GunDB with WebSocket relay
+const gun = Gun({
+  file: 'radata', // Persist data to radata directory (production-ready)
+  web: server as any, // Attach to HTTP server for WebSocket
+});
+
+// Enable GunDB's real-time sync
+gun.on('auth', () => {
+  console.log('GunDB authenticated');
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Add a permissive Content Security Policy so the UI can load local resources
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'"
+  );
+  next();
+});
+
+// Serve static UI from /public
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Root serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+});
+
+// Favicon: respond 204 if not present to avoid CSP console warning
+app.get('/favicon.ico', (req, res) => {
+  const ico = path.join(__dirname, '..', 'public', 'favicon.ico');
+  res.sendFile(ico, err => {
+    if (err) res.status(204).end();
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -54,19 +94,7 @@ app.get('/api/groups/:groupId', (req, res) => {
   });
 });
 
-// Create HTTP server
-const server = http.createServer(app);
-
-// Initialize GunDB with WebSocket relay
-const gun = Gun({
-  file: 'radata', // Persist data to radata directory (production-ready)
-  web: server as any, // Attach to HTTP server for WebSocket
-});
-
-// Enable GunDB's real-time sync
-gun.on('auth', () => {
-  console.log('GunDB authenticated');
-});
+// (server and gun already initialized above)
 
 // Start server
 server.listen(PORT, () => {
