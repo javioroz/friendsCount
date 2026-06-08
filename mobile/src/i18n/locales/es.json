@@ -155,7 +155,10 @@
     "aiErrorTitle": "No se pudo obtener la evaluación de la IA",
     "saveWithoutAI": "Guardar sin IA",
     "unexpectedError": "Ha ocurrido un error inesperado",
-    "groupNotFound": "Grupo no encontrado"
+    "groupNotFound": "Grupo no encontrado",
+    "delete": "Eliminar favor",
+    "deleteTitle": "Eliminar favor",
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar este favor?"  
   },
   "aiErrors": {
     "unauthorized": "API Key inválida o no autorizada (Error 401)",

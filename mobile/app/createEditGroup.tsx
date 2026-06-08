@@ -19,6 +19,7 @@ import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { getGun } from '@/src/services/gunService';
 import { useTranslation } from 'react-i18next';
+import { Clipboard } from 'react-native';
 
 const EMOJI_LIST = [
   '🏴‍☠️','🏠','🎉','🍕','🍔','🍺','🏖️','✈️','🚗','🌍','⭐','❤️','🔥',
@@ -569,8 +570,19 @@ const CreateEditGroupScreen = () => {
           {isEditMode && group && (
             <View style={styles.formSection}>
               <ThemedText style={[styles.label, { color: colors.text }]}>{t('createEditGroup.groupId')}</ThemedText>
-              <View style={[styles.groupIdDisplay, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-                <ThemedText style={[styles.groupIdText, { color: colors.muted }]}>{group.id}</ThemedText>
+              <View style={styles.rowBetween}>
+                <View style={[styles.groupIdDisplay, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  <ThemedText style={[styles.groupIdText, { color: colors.muted }]}>{group.id}                 </ThemedText>
+                </View>
+                <TouchableOpacity
+                  style={styles.copyButton}
+                  onPress={() => {
+                    Clipboard.setString(group.id);
+                    Alert.alert(t('createEditGroup.groupIdCopied'));
+                  }}
+                >
+                  <Ionicons name="copy" size={20} color={colors.primary} />
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -841,6 +853,13 @@ const styles = StyleSheet.create({
   addMemberText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  copyButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   createButton: {
     paddingVertical: 14,

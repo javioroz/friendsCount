@@ -313,6 +313,7 @@ const AddEditExpenseScreen = () => {
               style={[styles.deleteButton, { backgroundColor: '#ef4444' }]}
               onPress={handleDeleteExpense}
             >
+              <Ionicons name="trash-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
               <ThemedText style={styles.deleteButtonText}>{t('expenses.delete')}</ThemedText>
             </TouchableOpacity>
           )}
@@ -397,12 +398,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   payerOption: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, marginBottom: 8 },
-  createButton: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', marginBottom: 12 },
-  createButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
-  cancelButton: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, alignItems: 'center', marginBottom: 20 },
-  cancelButtonText: { fontSize: 16, fontWeight: '600' },
-  deleteButton: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
-  deleteButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  createButton: { 
+    paddingVertical: 14, 
+    paddingHorizontal: 16, 
+    borderRadius: 8, 
+    alignItems: 'center', 
+    marginBottom: 12 
+  },
+  createButtonText: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: '#fff' 
+  },
+  cancelButton: { 
+    paddingVertical: 14, 
+    paddingHorizontal: 16, 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    alignItems: 'center', 
+    marginBottom: 12 
+  },
+  cancelButtonText: { 
+    fontSize: 16, 
+    fontWeight: '600' 
+  },
+  deleteButton: { 
+    paddingVertical: 14, 
+    paddingHorizontal: 16, 
+    borderRadius: 8, 
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center', 
+    marginBottom: 20 
+  },
+  deleteButtonText: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: '#fff' 
+  },
 });
 
 export default AddEditExpenseScreen;

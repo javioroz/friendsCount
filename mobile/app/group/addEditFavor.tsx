@@ -19,13 +19,14 @@ import { callLLMForFavorEvaluation } from '@/src/services/llmService';
 import { getGun } from '@/src/services/gunService';
 import { putFavor } from '@/src/services/gunService';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 
 const SCORE_OPTIONS = Array.from({ length: 21 }, (_, index) => 10 - index);
 
 const AddEditFavorScreen = () => {
   const router = useRouter();
   const { groupId, favorId } = useLocalSearchParams<{ groupId?: string; favorId?: string }>();
-  const { groups, addFavor, updateFavor } = useGroupStore();
+  const { groups, addFavor, updateFavor, removeFavor } = useGroupStore();
   const { colors } = useTheme();
   const { t } = useTranslation();
 
@@ -214,6 +215,29 @@ const AddEditFavorScreen = () => {
     }
   };
 
+  const handleDeleteFavor = (favorId: string | undefined) => {
+      if (!groupId || !favorId) {
+        Alert.alert( t('favors.error'), 'No se pudo eliminar el favor. Inténtalo de nuevo.');
+        return;
+      }
+  
+      Alert.alert(
+        t('favors.deleteTitle'),
+        t('favors.deleteConfirm'),
+        [
+          { text: t('favors.cancel'), style: 'cancel' },
+          {
+            text: t('favors.delete'),
+            style: 'destructive',
+            onPress: () => {
+              removeFavor(groupId, favorId);
+              router.back();
+            },
+          },
+        ]
+      );
+    };
+
   if (!group) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
@@ -329,6 +353,15 @@ const AddEditFavorScreen = () => {
           >
             <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>{t('app.cancel')}</ThemedText>
           </TouchableOpacity>
+          {isEditMode && (
+            <TouchableOpacity
+              style={[styles.deleteButton, { backgroundColor: '#ef4444' }]}
+              onPress={() => handleDeleteFavor(favorId)}
+            >
+              <Ionicons name="trash-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <ThemedText style={styles.deleteButtonText}>{t('favors.delete')}</ThemedText>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </SafeAreaView>
     </>
@@ -386,12 +419,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },
+  deleteButton: { 
+    paddingVertical: 14, 
+    paddingHorizontal: 16, 
+    borderRadius: 8, 
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20 
+  },
+  deleteButtonText: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: '#fff' },
 });
 
 export default AddEditFavorScreen;
