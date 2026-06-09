@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 
 const GroupsScreen = () => {
   const router = useRouter();
-  const { groups, addGroup, setCurrentGroup } = useGroupStore();
+  const { groups, addGroup, updateGroup, setCurrentGroup } = useGroupStore();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -27,15 +27,25 @@ const GroupsScreen = () => {
   // Sync all groups with GunDB
   useAllGroupsSync();
   
-  // Initialize with mock data on first load
+  // Initialize (or refresh) mock groups on first load.
+  // We intentionally call `updateGroup` here so that if a user opens the
+  // app after a schema change, the local store is re-seeded from the
+  // bundled `mockGroups.json` instead of keeping stale GunDB data.
   useEffect(() => {
-    if (!hasInitialized && groups.length === 0) {
-      mockGroups.forEach((group) => {
-        addGroup(group);
+    if (!hasInitialized) {
+      mockGroups.forEach((mockGroup) => {
+        const existing = groups.find((g) => g.id === mockGroup.id);
+        if (!existing) {
+          addGroup(mockGroup);
+        } else {
+          // Refresh the mock group with the canonical data from the JSON file
+          // so that the local store never drifts away from `mockGroups.json`.
+          updateGroup(mockGroup.id, mockGroup);
+        }
       });
       setHasInitialized(true);
     }
-  }, [hasInitialized, groups.length, addGroup]);
+  }, [hasInitialized, groups, addGroup, updateGroup]);
   
   const handleGroupPress = (groupId: string) => {
     setCurrentGroup(groupId);

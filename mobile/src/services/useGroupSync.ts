@@ -173,41 +173,53 @@ const updateGroupWithRankings = (groupId: string, rankings: MemberRanking[]) => 
 };
 
 /**
+ * Detects whether a group id corresponds to a "mock" / fixture group that
+ * ships with the app (e.g. `group_mock1`). These groups are seeded from
+ * `mockGroups.json` directly into the local store and must NOT be
+ * overwritten by data that was previously persisted in GunDB (which may
+ * belong to a different schema version).
+ */
+const isMockGroupId = (id: string): boolean => id.startsWith('group_mock');
+
+/**
  * Hook para sincronizar todos los grupos
  * Útil para la pantalla principal de lista de grupos
  */
 export const useAllGroupsSync = () => {
   const { groups } = useGroupStore();
-  
+
   useEffect(() => {
-    // Subscribe to each group
+    // Subscribe to each non-mock group. Mock groups come from the local
+    // `mockGroups.json` and should not be replaced by stale GunDB data.
     groups.forEach((group) => {
+      if (isMockGroupId(group.id)) return;
+
       // Subscribe to group meta
       subscribeToGroupMeta(group.id, (meta) => {
         updateGroupWithMeta(group.id, meta);
       });
-      
+
       // Subscribe to members
       subscribeToMembers(group.id, (members) => {
         updateGroupWithMembers(group.id, members);
       });
-      
+
       // Subscribe to expenses
       subscribeToExpenses(group.id, (expenses) => {
         updateGroupWithExpenses(group.id, expenses);
       });
-      
+
       // Subscribe to favors
       subscribeToFavors(group.id, (favors) => {
         updateGroupWithFavors(group.id, favors);
       });
-      
+
       // Subscribe to rankings
       subscribeToRankings(group.id, (rankings) => {
         updateGroupWithRankings(group.id, rankings);
       });
     });
-    
+
     // Cleanup on unmount or when groups change
     return () => {
       // Note: GunDB subscriptions don't have explicit unsubscribe,

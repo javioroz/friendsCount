@@ -2,23 +2,23 @@
   {
     "id": "group_mock1",
     "meta": {
-      "name": "Viaje de amigos (ejemplo)",
+      "name": "Viaje de colegas (ejemplo)",
       "icon": "🚗",
       "currency": "EUR",
       "createdAt": "2026-05-30T12:00:00.000Z"
     },
     "members": [
-      { "id": "user_mock1_0", "name": "Carlos" },
-      { "id": "user_mock1_1", "name": "Alberto" },
-      { "id": "user_mock1_2", "name": "Elisa" }
+      { "id": "member_mock1_000", "name": "Carlos" },
+      { "id": "member_mock1_001", "name": "Alberto" },
+      { "id": "member_mock1_002", "name": "Elisa" }
     ],
     "expenses": [
       {
         "id": "expense_mock1_0",
         "description": "Cena en trattoria",
         "amount": 45.5,
-        "paidBy": "user_mock1_0",
-        "sharedBy": ["user_mock1_0", "user_mock1_1", "user_mock1_2"],
+        "paidBy": "member_mock1_000",
+        "sharedBy": ["member_mock1_000", "member_mock1_001", "member_mock1_002"],
         "date": "2026-06-08T10:00:00.000Z",
         "category": "🍔"
       },
@@ -26,8 +26,8 @@
         "id": "expense_mock1_1",
         "description": "Taxi al aeropuerto",
         "amount": 23.0,
-        "paidBy": "user_mock1_1",
-        "sharedBy": ["user_mock1_0", "user_mock1_1"],
+        "paidBy": "member_mock1_001",
+        "sharedBy": ["member_mock1_000", "member_mock1_001"],
         "date": "2026-06-07T10:00:00.000Z",
         "category": "🚗"
       }
@@ -36,7 +36,7 @@
       {
         "id": "favor_mock1_0",
         "description": "Fregó el baño a las 3am",
-        "madeBy": "user_mock1_0",
+        "madeBy": "member_mock1_000",
         "date": "2026-06-06T10:00:00.000Z",
         "aiResponse": {
           "score": 5,
@@ -47,20 +47,20 @@
       {
         "id": "favor_mock1_1",
         "description": "Hizo la comida",
-        "madeBy": "user_mock1_1",
+        "madeBy": "member_mock1_001",
         "date": "2026-06-06T10:00:00.000Z",
         "manualScore": 2
       }
     ],
     "balances": [
-      { "memberId": "user_mock1_0", "amount": 45.2 },
-      { "memberId": "user_mock1_1", "amount": -12.3 },
-      { "memberId": "user_mock1_2", "amount": -8.4 }
+      { "memberId": "member_mock1_000", "amount": 45.2 },
+      { "memberId": "member_mock1_001", "amount": -12.3 },
+      { "memberId": "member_mock1_002", "amount": -8.4 }
     ],
     "rankings": [
-      { "memberId": "user_mock1_0", "nickname": "El Fregón", "score": 5 },
-      { "memberId": "user_mock1_1", "nickname": "El Nuevo", "score": 2 },
-      { "memberId": "user_mock1_2", "nickname": "La Ausente", "score": 0 }
+      { "memberId": "member_mock1_000", "nickname": "El Fregón", "score": 5 },
+      { "memberId": "member_mock1_001", "nickname": "El Nuevo", "score": 2 },
+      { "memberId": "member_mock1_002", "nickname": "La Ausente", "score": 0 }
     ]
   }
 ]
