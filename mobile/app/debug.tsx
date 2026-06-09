@@ -128,16 +128,16 @@ const DebugScreen = () => {
               groups.map((group, index) => (
                 <View key={group.id} style={styles.groupCard}>
                   <Text style={styles.groupHeader}>
-                    Grupo #{index + 1}: {group.icon} {group.name}
+                    Grupo #{index + 1}: {group.meta.icon} {group.meta.name}
                   </Text>
                   <Text style={styles.groupInfo}>ID: {group.id}</Text>
                   <Text style={styles.groupInfo}>Miembros: {group.members.length}</Text>
                   <Text style={styles.groupInfo}>
                     Miembros: {group.members.map(m => m.name).join(', ')}
                   </Text>
-                  <Text style={styles.groupInfo}>Divisa: {group.currency}</Text>
+                  <Text style={styles.groupInfo}>Divisa: {group.meta.currency}</Text>
                   <Text style={styles.groupInfo}>
-                    Creado: {new Date(group.createdAt).toLocaleString()}
+                    Creado: {new Date(group.meta.createdAt).toLocaleString()}
                   </Text>
                   {group.id === currentGroupId && (
                     <Text style={styles.currentBadge}>← Grupo Actual</Text>
@@ -164,10 +164,10 @@ const DebugScreen = () => {
                       currentGroupId,
                       groups: groups.map(g => ({
                         id: g.id,
-                        name: g.name,
-                        icon: g.icon,
+                        name: g.meta.name,
+                        icon: g.meta.icon,
                         members: g.members.length,
-                        currency: g.currency,
+                        currency: g.meta.currency,
                       })),
                     },
                   },

@@ -82,15 +82,21 @@ const AddEditFavorScreen = () => {
     const dateISOString = new Date(favorDate + 'T00:00:00Z').toISOString();
 
     // Check if group has API key when using IA
-    if (useIA && !group.llmApiKey) {
+    if (useIA && !group.meta.llmApiKey) {
       Alert.alert(t('alert.error'), 'El grupo no tiene configurada una API Key para IA. Por favor, configúrala en los ajustes del grupo.');
       return;
     }
 
     setIsLoading(true);
 
+    // Extract timestamp from group id to build favor ids that share the group's timestamp
+    const groupIdParts = (groupId || '').split('_');
+    const groupTimestamp = groupIdParts[groupIdParts.length - 1] || Date.now().toString();
+    const nextFavorNumber = String(group.favors.length).padStart(3, '0');
+    const generatedFavorId = `favor_${groupTimestamp}_${nextFavorNumber}`;
+
     try {
-      const favorIdValue = isEditMode && favorId ? favorId : `favor_${Date.now()}`;
+      const favorIdValue = isEditMode && favorId ? favorId : generatedFavorId;
       const member = group.members.find(m => m.id === madeBy);
 
       if (!member) {
@@ -146,9 +152,8 @@ const AddEditFavorScreen = () => {
               {
                 text: t('favors.saveWithoutAI'),
                 onPress: async () => {
-                  const favorWithoutAI = {
+                  const favorWithoutAI: any = {
                     id: favorIdValue,
-                    groupId,
                     description: description.trim(),
                     madeBy,
                     date: dateISOString,
@@ -172,10 +177,9 @@ const AddEditFavorScreen = () => {
         }
       }
 
-      // Create the favor object
-      const favor = {
+      // Create the favor object (no groupId, the relationship is implicit via the parent group)
+      const favor: any = {
         id: favorIdValue,
-        groupId,
         description: description.trim(),
         madeBy,
         date: dateISOString,
@@ -186,7 +190,7 @@ const AddEditFavorScreen = () => {
           message: aiResponse.comment,
           nickname: aiResponse.nicknames[madeBy] || '',
         } : undefined,
-      } as any;
+      };
 
       // Save to GunDB
       try {

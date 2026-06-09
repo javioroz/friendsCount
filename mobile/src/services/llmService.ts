@@ -18,9 +18,9 @@ export const callLLMForFavorEvaluation = async (
   favor: Favor,
   member: Member
 ): Promise<LLMResponse> => {
-  const apiKey = group.llmApiKey;
-  const model = group.llmModel || 'gpt-4o-mini';
-  const endpoint = group.llmEndpoint || 'https://api.openai.com/v1/chat/completions';
+  const apiKey = group.meta.llmApiKey;
+  const model = group.meta.llmModel || 'gpt-4o-mini';
+  const endpoint = group.meta.llmEndpoint || 'https://api.openai.com/v1/chat/completions';
 
   if (!apiKey) {
     throw new Error('No API key configured for this group');
@@ -129,5 +129,5 @@ No incluyas ningún texto fuera del JSON. No uses markdown. Solo JSON puro.`;
  * Check if a group has LLM configuration
  */
 export const hasLLMConfig = (group: Group): boolean => {
-  return Boolean(group.llmApiKey);
+  return Boolean(group.meta.llmApiKey);
 };

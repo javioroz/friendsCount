@@ -64,17 +64,14 @@ const JoinGroupScreen = () => {
               // Read member fields individually
               groupRef.get('members').get(memberId).get('id').once((id: any) => {
                 groupRef.get('members').get(memberId).get('name').once((name: any) => {
-                  groupRef.get('members').get(memberId).get('email').once((email: any) => {
-                    members.push({
-                      id: id || memberId,
-                      name: name || 'Unknown',
-                      email: email || '',
-                    });
-                    
-                    if (members.length >= 10) { // Max members limit
-                      resolve(members);
-                    }
+                  members.push({
+                    id: id || memberId,
+                    name: name || 'Unknown',
                   });
+                  
+                  if (members.length >= 10) { // Max members limit
+                    resolve(members);
+                  }
                 });
               });
             }
@@ -109,13 +106,15 @@ const JoinGroupScreen = () => {
       const members = await readMembers();
       console.log('🟢 Members read complete:', members.length, 'members');
       
-      // Build the group
+      // Build the group using the new meta structure
       const group: Group = {
         id: id as string,
-        name: name as string,
-        icon: (icon as string) || '🏠',
-        currency: (currency as string) || 'EUR',
-        createdAt: (createdAt as string) || new Date().toISOString(),
+        meta: {
+          name: name as string,
+          icon: (icon as string) || '🏠',
+          currency: (currency as string) || 'EUR',
+          createdAt: (createdAt as string) || new Date().toISOString(),
+        },
         members: members,
         expenses: [],
         favors: [],

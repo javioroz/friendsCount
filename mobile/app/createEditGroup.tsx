@@ -29,11 +29,6 @@ const EMOJI_LIST = [
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'INR', 'MXN'];
 
-interface Member {
-  id: string;
-  name: string;
-}
-
 const CreateEditGroupScreen = () => {
   const router = useRouter();
   const { groupId } = useLocalSearchParams<{ groupId?: string }>();
@@ -57,14 +52,13 @@ const CreateEditGroupScreen = () => {
 
   useEffect(() => {
     if (group) {
-      setGroupName(group.name);
-      setSelectedIcon(group.icon ?? EMOJI_LIST[0]);
-      setSelectedCurrency(group.currency ?? 'EUR');
-      // Enable AI if API key exists
-      setUseAI(Boolean(group.llmApiKey));
-      setApiKey(group.llmApiKey ?? '');
-      setLlmModel(group.llmModel ?? '');
-      setLlmEndpoint(group.llmEndpoint ?? '');
+      setGroupName(group.meta.name);
+      setSelectedIcon(group.meta.icon ?? EMOJI_LIST[0]);
+      setSelectedCurrency(group.meta.currency ?? 'EUR');
+      setUseAI(Boolean(group.meta.llmApiKey));
+      setApiKey(group.meta.llmApiKey ?? '');
+      setLlmModel(group.meta.llmModel ?? '');
+      setLlmEndpoint(group.meta.llmEndpoint ?? '');
       setMemberInputs(group.members.length ? group.members.map((member) => member.name) : ['']);
     } else if (!isEditMode) {
       setGroupName('');
@@ -92,6 +86,12 @@ const CreateEditGroupScreen = () => {
     setMemberInputs(newInputs);
   };
 
+  // Helper to extract the numeric timestamp from a group id of the form "group_<timestamp>"
+  const extractTimestampFromGroupId = (id: string): string => {
+    const parts = id.split('_');
+    return parts[parts.length - 1] || Date.now().toString();
+  };
+
   const handleSaveGroup = async () => {
     console.log('🔵 handleSaveGroup iniciado');
     console.log('🔵 isEditMode:', isEditMode);
@@ -104,36 +104,44 @@ const CreateEditGroupScreen = () => {
       return;
     }
 
-    const validMembers = memberInputs
-      .filter((name) => name.trim())
-      .map((name, index) => ({
-        id: `member_${Date.now()}_${index}`,
-        name: name.trim(),
-        email: `${name.trim().toLowerCase().replace(/\s+/g, '.')}@group.local`,
-      }));
-
-    console.log('🔵 validMembers:', validMembers);
-
-    if (validMembers.length === 0) {
-      console.log('🔴 Error: no hay miembros válidos');
-      Alert.alert(t('alert.error'), 'Por favor agrega al menos un participante');
-      return;
-    }
-
     if (isEditMode) {
       if (!group) {
         Alert.alert(t('alert.error'), 'Grupo no encontrado');
         return;
       }
 
+      const timestamp = extractTimestampFromGroupId(group.id);
+
+      // Reuse existing member ids when possible, otherwise create new ones with the same timestamp
+      const validMembers = memberInputs
+        .filter((name) => name.trim())
+        .map((name, index) => {
+          const existingMember = group.members[index];
+          return {
+            id: existingMember?.id ?? `member_${timestamp}_${String(index).padStart(3, '0')}`,
+            name: name.trim(),
+          };
+        });
+
+      console.log('🔵 validMembers:', validMembers);
+
+      if (validMembers.length === 0) {
+        console.log('🔴 Error: no hay miembros válidos');
+        Alert.alert(t('alert.error'), 'Por favor agrega al menos un participante');
+        return;
+      }
+
       const updatedGroup = {
         ...group,
-        name: groupName.trim(),
-        icon: selectedIcon,
-        currency: selectedCurrency,
-        llmApiKey: apiKey.trim(),
-        llmModel: llmModel.trim(),
-        llmEndpoint: llmEndpoint.trim(),
+        meta: {
+          ...group.meta,
+          name: groupName.trim(),
+          icon: selectedIcon,
+          currency: selectedCurrency,
+          llmApiKey: apiKey.trim(),
+          llmModel: llmModel.trim(),
+          llmEndpoint: llmEndpoint.trim(),
+        },
         members: validMembers,
         balances: validMembers.map((member) => ({
           memberId: member.id,
@@ -150,13 +158,13 @@ const CreateEditGroupScreen = () => {
           groupRef.put({
             meta: {
               id: group.id,
-              name: updatedGroup.name,
-              icon: updatedGroup.icon,
-              currency: updatedGroup.currency,
-              llmApiKey: updatedGroup.llmApiKey,
-              llmModel: updatedGroup.llmModel,
-              llmEndpoint: updatedGroup.llmEndpoint,
-              createdAt: updatedGroup.createdAt,
+              name: updatedGroup.meta.name,
+              icon: updatedGroup.meta.icon,
+              currency: updatedGroup.meta.currency,
+              llmApiKey: updatedGroup.meta.llmApiKey,
+              llmModel: updatedGroup.meta.llmModel,
+              llmEndpoint: updatedGroup.meta.llmEndpoint,
+              createdAt: updatedGroup.meta.createdAt,
             },
             members: updatedGroup.members.reduce((acc, member) => {
               acc[member.id] = member;
@@ -184,7 +192,6 @@ const CreateEditGroupScreen = () => {
         });
       } catch (error: any) {
         console.error('Error updating group in GunDB:', error);
-        // Still update local store even if GunDB fails
       }
 
       updateGroup(group.id, updatedGroup);
@@ -193,14 +200,35 @@ const CreateEditGroupScreen = () => {
       return;
     }
 
+    const timestamp = Date.now().toString();
+    const newGroupId = `group_${timestamp}`;
+
+    const validMembers = memberInputs
+      .filter((name) => name.trim())
+      .map((name, index) => ({
+        id: `member_${timestamp}_${String(index).padStart(3, '0')}`,
+        name: name.trim(),
+      }));
+
+    console.log('🔵 validMembers:', validMembers);
+
+    if (validMembers.length === 0) {
+      console.log('🔴 Error: no hay miembros válidos');
+      Alert.alert(t('alert.error'), 'Por favor agrega al menos un participante');
+      return;
+    }
+
     const newGroup = {
-      id: `group_${Date.now()}`,
-      name: groupName.trim(),
-      icon: selectedIcon,
-      currency: selectedCurrency,
-      llmApiKey: apiKey.trim(),
-      llmModel: llmModel.trim(),
-      llmEndpoint: llmEndpoint.trim(),
+      id: newGroupId,
+      meta: {
+        name: groupName.trim(),
+        icon: selectedIcon,
+        currency: selectedCurrency,
+        llmApiKey: apiKey.trim(),
+        llmModel: llmModel.trim(),
+        llmEndpoint: llmEndpoint.trim(),
+        createdAt: new Date().toISOString(),
+      },
       members: validMembers,
       expenses: [],
       favors: [],
@@ -209,7 +237,6 @@ const CreateEditGroupScreen = () => {
         amount: 0,
       })),
       rankings: [],
-      createdAt: new Date().toISOString(),
     };
 
     console.log('🟢 Iniciando guardado en GunDB...');
@@ -221,7 +248,6 @@ const CreateEditGroupScreen = () => {
       const groupRef = gun.get('friendscount').get('groups').get(newGroup.id);
       console.log('🟢 groupRef:', groupRef ? 'exists' : 'null');
       
-      // Create a promise with timeout
       const putPromise = new Promise<void>((resolve, reject) => {
         console.log('🟢 Ejecutando groupRef.put()...');
         
@@ -229,22 +255,21 @@ const CreateEditGroupScreen = () => {
         const metaRef = groupRef.get('meta');
         const saveMeta = () => new Promise<void>((resolveMeta, rejectMeta) => {
           metaRef.get('id').put(newGroup.id);
-          metaRef.get('name').put(newGroup.name);
-          metaRef.get('icon').put(newGroup.icon);
-          metaRef.get('currency').put(newGroup.currency);
-          if (newGroup.llmApiKey) {
-            metaRef.get('llmApiKey').put(newGroup.llmApiKey);
+          metaRef.get('name').put(newGroup.meta.name);
+          metaRef.get('icon').put(newGroup.meta.icon);
+          metaRef.get('currency').put(newGroup.meta.currency);
+          if (newGroup.meta.llmApiKey) {
+            metaRef.get('llmApiKey').put(newGroup.meta.llmApiKey);
           }
-          if (newGroup.llmModel) {
-            metaRef.get('llmModel').put(newGroup.llmModel);
+          if (newGroup.meta.llmModel) {
+            metaRef.get('llmModel').put(newGroup.meta.llmModel);
           }
-          if (newGroup.llmEndpoint) {
-            metaRef.get('llmEndpoint').put(newGroup.llmEndpoint);
+          if (newGroup.meta.llmEndpoint) {
+            metaRef.get('llmEndpoint').put(newGroup.meta.llmEndpoint);
           }
-          metaRef.get('createdAt').put(newGroup.createdAt);
+          metaRef.get('createdAt').put(newGroup.meta.createdAt);
           metaRef.get('createdBy').put('current_user');
           
-          // Give GunDB a moment to persist
           setTimeout(resolveMeta, 500);
         });
         
@@ -255,10 +280,8 @@ const CreateEditGroupScreen = () => {
             const memberRef = membersRef.get(member.id);
             memberRef.get('id').put(member.id);
             memberRef.get('name').put(member.name);
-            memberRef.get('email').put(member.email);
           });
           
-          // Give GunDB a moment to persist
           setTimeout(resolveMembers, 500);
         });
         
@@ -275,7 +298,6 @@ const CreateEditGroupScreen = () => {
           });
       });
       
-      // Add timeout of 5 seconds
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
           console.log('🔴 Timeout de 5 segundos alcanzado');
@@ -283,7 +305,6 @@ const CreateEditGroupScreen = () => {
         }, 5000);
       });
       
-      // Race between put and timeout
       await Promise.race([putPromise, timeoutPromise]);
       console.log('🟢 GunDB put completado exitosamente');
     } catch (error: any) {
@@ -293,16 +314,14 @@ const CreateEditGroupScreen = () => {
 
     console.log('🟢 Antes de addGroup, grupos en store:', useGroupStore.getState().groups.length);
     
-    // Always add to local store (even if GunDB fails)
     console.log('📦 Añadiendo grupo al store local:', JSON.stringify(newGroup, null, 2));
     addGroup(newGroup);
     console.log('✅ addGroup llamado');
     
     const storeAfter = useGroupStore.getState();
     console.log('✅ Después de addGroup, grupos en store:', storeAfter.groups.length);
-    console.log('✅ Grupos en store:', storeAfter.groups.map(g => ({ id: g.id, name: g.name })));
+    console.log('✅ Grupos en store:', storeAfter.groups.map(g => ({ id: g.id, name: g.meta.name })));
     
-    // Navigate back first, then show success message
     console.log('🟢 Llamando a router.back()');
     router.back();
     setTimeout(() => {
@@ -368,7 +387,7 @@ const CreateEditGroupScreen = () => {
 
   if (isEditMode && !group) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <ThemedText style={{ color: colors.text, margin: 16 }}>{t('createEditGroup.groupNotFound')}</ThemedText>
       </SafeAreaView>
     );
@@ -382,7 +401,7 @@ const CreateEditGroupScreen = () => {
           headerBackTitle: 'Atrás',
         }}
       />
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.groupNameAndIconRow}>
             <View style={styles.nameSection}>
@@ -434,7 +453,7 @@ const CreateEditGroupScreen = () => {
               ]}
               onPress={() => setShowCurrencySelector(!showCurrencySelector)}
             >
-              <ThemedText style={[styles.currencySelectorText, { color: colors.text }]}> 
+              <ThemedText style={[styles.currencySelectorText, { color: colors.text }]}>
                 {selectedCurrency}
               </ThemedText>
               <Ionicons
@@ -591,7 +610,7 @@ const CreateEditGroupScreen = () => {
             style={[styles.createButton, { backgroundColor: colors.primary }]}
             onPress={handleSaveGroup}
           >
-            <ThemedText style={styles.createButtonText}> 
+            <ThemedText style={styles.createButtonText}>
               {isEditMode ? t('createEditGroup.saveSettings') : t('createEditGroup.create')}
             </ThemedText>
           </TouchableOpacity>
@@ -657,7 +676,7 @@ const CreateEditGroupScreen = () => {
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
-            
+
             <ScrollView style={apiModalStyles.content}>
               {/* OpenAI */}
               <View style={apiModalStyles.providerSection}>

@@ -66,8 +66,8 @@ const GroupsScreen = () => {
             >
               <View style={styles.groupInfo}>
                 <View style={styles.groupTitleRow}>
-                  <ThemedText style={[styles.groupIcon, { color: colors.text }]}>{group.icon}</ThemedText>
-                  <ThemedText style={[styles.groupName, { color: colors.text }]}>{group.name}</ThemedText>
+                  <ThemedText style={[styles.groupIcon, { color: colors.text }]}>{group.meta.icon}</ThemedText>
+                  <ThemedText style={[styles.groupName, { color: colors.text }]}>{group.meta.name}</ThemedText>
                 </View>
                 <ThemedText style={[styles.memberCount, { color: colors.muted }]}> 
                   {group.members.length} miembro{group.members.length !== 1 ? 's' : ''}

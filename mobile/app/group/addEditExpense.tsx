@@ -102,9 +102,14 @@ const AddEditExpenseScreen = () => {
       return;
     }
 
+    // Extract timestamp from group id (e.g. "group_1780914236947" -> "1780914236947")
+    const groupIdParts = groupId.split('_');
+    const timestamp = groupIdParts[groupIdParts.length - 1] || Date.now().toString();
+    const nextExpenseNumber = String(group.expenses.length).padStart(3, '0');
+    const newExpenseId = `expen_${timestamp}_${nextExpenseNumber}`;
+
     const expense = {
-      id: `expense_${Date.now()}`,
-      groupId,
+      id: newExpenseId,
       description: description.trim(),
       amount,
       category: selectedCategory,
@@ -233,7 +238,7 @@ const AddEditExpenseScreen = () => {
             <View style={styles.formColumnNarrow}>
               <ThemedText style={[styles.label, { color: colors.text }]}>{t('expenses.currency')}</ThemedText>
               <View style={[styles.currencyDisplay, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-                <ThemedText style={{ fontWeight: '600', color: colors.primary }}>{group.currency ?? 'EUR'}</ThemedText>
+                <ThemedText style={{ fontWeight: '600', color: colors.primary }}>{group.meta.currency ?? 'EUR'}</ThemedText>
               </View>
             </View>
           </View>

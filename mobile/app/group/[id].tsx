@@ -80,8 +80,8 @@ const GroupScreen = () => {
         options={{
           headerTitle: () => (
             <View style={styles.groupHeaderTitleContainer}>
-              <Text style={styles.groupHeaderTitle}>  {group?.name ?? 'Grupo'}  </Text>
-              <Text style={styles.groupHeaderIcon}>{group?.icon ?? '🏠'}</Text>
+              <Text style={styles.groupHeaderTitle}>  {group?.meta.name ?? 'Grupo'}  </Text>
+              <Text style={styles.groupHeaderIcon}>{group?.meta.icon ?? '🏠'}</Text>
             </View>
           ),
           headerBackTitle: '',

@@ -77,13 +77,16 @@ const updateGroupWithMeta = (groupId: string, meta: any) => {
   if (group) {
     updateGroup(groupId, {
       ...group,
-      name: meta.name,
-      icon: meta.icon,
-      currency: meta.currency,
-      llmApiKey: meta.llmApiKey,
-      llmModel: meta.llmModel,
-      llmEndpoint: meta.llmEndpoint,
-      createdAt: meta.createdAt,
+      meta: {
+        ...group.meta,
+        name: meta.name,
+        icon: meta.icon,
+        currency: meta.currency,
+        llmApiKey: meta.llmApiKey,
+        llmModel: meta.llmModel,
+        llmEndpoint: meta.llmEndpoint,
+        createdAt: meta.createdAt,
+      },
     });
   }
 };

@@ -335,15 +335,18 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
 
     // Create a settlement expense in the database
     // The debtor (fromId) "pays" the creditor (toId) via a virtual expense
+    // Use the same id scheme as addEditExpense (timestamp + sequence)
+    const groupIdParts = (group.id || '').split('_');
+    const groupTimestamp = groupIdParts[groupIdParts.length - 1] || Date.now().toString();
+    const settlementExpenseNumber = String(group.expenses.length).padStart(3, '0');
     const settlementExpense = {
-      id: `settlement-${Date.now()}-${index}`,
-      groupId: group.id,
+      id: `expen_${groupTimestamp}_${settlementExpenseNumber}`,
       description: 'Liquidación de deuda',
       amount: settlement.amount,
       category: '💵', // Payment category
       paidBy: settlement.fromId, // Debtor pays
       sharedBy: [settlement.toId], // Creditor receives (only them)
-      date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
+      date: new Date().toISOString(), // Full ISO string for consistency
     };
 
     // Add the expense to the store

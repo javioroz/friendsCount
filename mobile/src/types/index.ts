@@ -3,12 +3,10 @@
 export interface Member {
   id: string;
   name: string;
-  email: string;
 }
 
 export interface Expense {
   id: string;
-  groupId: string;
   description: string;
   amount: number;
   paidBy: string; // Member ID
@@ -19,7 +17,6 @@ export interface Expense {
 
 export interface Favor {
   id: string;
-  groupId: string;
   description: string;
   madeBy: string; // Member ID - who did the favor
   date: string;
@@ -49,26 +46,22 @@ export interface MemberRanking {
   score: number;
 }
 
-export interface Group {
-  id: string;
+export interface GroupMeta {
   name: string;
   icon: string;
-  currency?: string;
+  currency: string;
+  createdAt: string;
   llmApiKey?: string;
   llmModel?: string; // Model name for the LLM (e.g., "gpt-4", "claude-3")
   llmEndpoint?: string; // Custom endpoint URL (optional, defaults to OpenAI-compatible)
+}
+
+export interface Group {
+  id: string;
+  meta: GroupMeta;
   members: Member[];
   expenses: Expense[];
   favors: Favor[];
   balances: Balance[];
   rankings: MemberRanking[];
-  groupKey?: string;
-  aiConversationId?: string; // For Claude conversation context
-  createdAt: string;
-}
-
-export interface GroupMeta {
-  name: string;
-  createdAd: string;
-  createdBy: Member["id"]; // Member ID
 }

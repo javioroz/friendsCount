@@ -34,7 +34,8 @@ Debes responder SIEMPRE con un JSON válido y nada más, con esta estructura exa
 No incluyas ningún texto fuera del JSON. No uses markdown. Solo JSON puro.`;
 
 export const buildUserPrompt = (group: any, favor: any, memberName: string) => {
-  return `Grupo: ${group.name} (${group.id})
+  const groupName = group?.meta?.name ?? group?.name ?? 'Grupo';
+  return `Grupo: ${groupName} (${group.id})
 Miembro que hace el favor: ${memberName}
 Descripción del favor: ${favor.description}
 
