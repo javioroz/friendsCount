@@ -8,10 +8,21 @@
   </head>
   <body>
     <main>
-      <h1>Grupos en GunDB</h1>
-      <div id="status">Cargando...</div>
-      <ul id="groups"></ul>
-      <pre id="raw"></pre>
+      <!-- Vista de lista de grupos -->
+      <section id="view-list">
+        <h1>Grupos en GunDB</h1>
+        <div id="status">Cargando...</div>
+        <ul id="groups"></ul>
+      </section>
+
+      <!-- Vista de detalles de un grupo -->
+      <section id="view-details" hidden>
+        <button id="back-btn" type="button">← Volver a la lista</button>
+        <h1 id="details-title">Cargando...</h1>
+        <div id="details-status"></div>
+        <h2>Datos del grupo (JSON)</h2>
+        <pre id="details-json"></pre>
+      </section>
     </main>
     <script src="/app.js"></script>
   </body>
