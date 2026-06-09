@@ -3,6 +3,7 @@ import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { useGroupStore } from '@/src/stores/groupStore';
+import { getGun, putExpense } from '@/src/services/gunService';
 
 interface Member {
   id: string;
@@ -340,7 +341,7 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
     const groupTimestamp = groupIdParts[groupIdParts.length - 1] || Date.now().toString();
     const settlementExpenseNumber = String(group.expenses.length).padStart(3, '0');
     const settlementExpense = {
-      id: `expen_${groupTimestamp}_${settlementExpenseNumber}`,
+      id: `expen_${groupTimestamp}_${Date.now().toString()}_${settlementExpenseNumber}`,
       description: 'Liquidación de deuda',
       amount: settlement.amount,
       category: '💵', // Payment category
@@ -349,7 +350,19 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
       date: new Date().toISOString(), // Full ISO string for consistency
     };
 
-    // Add the expense to the store
+    // Save to GunDB first
+    try {
+      const gun = getGun();
+      void gun; // keep reference
+      // Fire-and-forget; local store will be updated regardless
+      putExpense(group.id, settlementExpense).catch((gunError) => {
+        console.error('Error saving settlement expense to GunDB:', gunError);
+      });
+    } catch (gunError) {
+      console.error('Error saving settlement expense to GunDB:', gunError);
+    }
+
+    // Add the expense to the local store
     addExpense(group.id, settlementExpense);
 
     // Update current balances

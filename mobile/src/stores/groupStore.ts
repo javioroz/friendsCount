@@ -1,6 +1,60 @@
 import { create } from 'zustand';
 import { Group, Expense, Favor, Member, Balance, Settlement, MemberRanking } from '../types';
 
+/**
+ * Coerce any value into a string array. GunDB may return a native array, an
+ * indexed object (`{0:'a',1:'b'}`), a GunDB chain node (`{_:{0:'a',1:'b'}}`),
+ * a JSON string, or even `null`/`undefined`. We need a single helper that
+ * understands every shape so the rest of the code can assume a real Array.
+ */
+const normalizeToStringArray = (value: any): string[] => {
+  if (value === null || value === undefined) return [];
+  if (Array.isArray(value)) {
+    return value.map((v) => String(v)).filter((v) => v.length > 0);
+  }
+  if (typeof value === 'string') {
+    // Try to parse as JSON array first
+    const trimmed = value.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((v: any) => String(v)).filter((v) => v.length > 0);
+        }
+      } catch {
+        // fall through
+      }
+    }
+    return [];
+  }
+  if (typeof value === 'object') {
+    // Unwrap GunDB chain node if needed
+    let current: any = value;
+    if (current._ && typeof current._ === 'object' && Object.keys(current).every((k) => k === '_' || k === '>' || k === ':' || k === '#')) {
+      current = current._;
+    }
+    const keys = Object.keys(current)
+      .filter((k) => /^\d+$/.test(k))
+      .sort((a, b) => Number(a) - Number(b));
+    if (keys.length === 0) {
+      // Maybe it's the __gun_array__ sentinel
+      if (typeof current.__gun_array__ === 'string') {
+        try {
+          const parsed = JSON.parse(current.__gun_array__);
+          if (Array.isArray(parsed)) {
+            return parsed.map((v: any) => String(v)).filter((v) => v.length > 0);
+          }
+        } catch {
+          // fall through
+        }
+      }
+      return [];
+    }
+    return keys.map((k) => String(current[k])).filter((v) => v.length > 0);
+  }
+  return [];
+};
+
 interface GroupStore {
   groups: Group[];
   currentGroupId: string | null;
@@ -77,6 +131,10 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
     set((state) => {
       const updatedGroups = state.groups.map((group) => {
         if (group.id === groupId) {
+          // Avoid duplicates by id
+          if (group.expenses.some((e) => e.id === expense.id)) {
+            return group;
+          }
           const updatedGroup = { 
             ...group, 
             expenses: [...group.expenses, expense] 
@@ -131,6 +189,10 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
     set((state) => {
       const updatedGroups = state.groups.map((group) => {
         if (group.id === groupId) {
+          // Avoid duplicates by id
+          if (group.favors.some((f) => f.id === favor.id)) {
+            return group;
+          }
           const updatedGroup = { 
             ...group, 
             favors: [...group.favors, favor] 
@@ -189,27 +251,32 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
   
   calculateBalancesFromExpenses: (group: { members: Member[]; expenses: Expense[] }) => {
     const balances: Map<string, number> = new Map();
-    
+
     // Initialize all members with 0 balance
     group.members.forEach((member) => {
       balances.set(member.id, 0);
     });
-    
+
     // Calculate balances from expenses
     group.expenses.forEach((expense) => {
-      if (!expense.sharedBy || expense.sharedBy.length === 0) return;
-      
-      const amountPerPerson = expense.amount / expense.sharedBy.length;
-      
+      // Defensive: `sharedBy` may come from GunDB in several shapes
+      // (real Array, an indexed object, a GunDB chain node, or even a JSON
+      // string). Coerce to a clean string array before iterating so the
+      // balance calculation never crashes with `forEach is not a function`.
+      const sharedBy = normalizeToStringArray(expense.sharedBy);
+      if (sharedBy.length === 0) return;
+
+      const amountPerPerson = expense.amount / sharedBy.length;
+
       // The person who paid gets positive balance (they're owed money)
       balances.set(expense.paidBy, (balances.get(expense.paidBy) || 0) + expense.amount);
-      
+
       // Each person who benefited gets negative balance (they owe money)
-      expense.sharedBy.forEach((memberId) => {
+      sharedBy.forEach((memberId: string) => {
         balances.set(memberId, (balances.get(memberId) || 0) - amountPerPerson);
       });
     });
-    
+
     return Array.from(balances.entries()).map(([memberId, amount]) => ({
       memberId,
       amount: Math.round(amount * 100) / 100, // Round to avoid floating point issues

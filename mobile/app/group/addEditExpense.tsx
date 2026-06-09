@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
+import { getGun } from '@/src/services/gunService';
+import { putExpense } from '@/src/services/gunService';
 import { useTranslation } from 'react-i18next';
 
 const getCategoryEmojis = (t: (key: string) => string) => [
@@ -80,7 +82,7 @@ const AddEditExpenseScreen = () => {
     setAmountText(filtered);
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (!groupId || !group) {
       Alert.alert( t('alert.error'), 'Grupo no encontrado');
       return;
@@ -104,12 +106,13 @@ const AddEditExpenseScreen = () => {
 
     // Extract timestamp from group id (e.g. "group_1780914236947" -> "1780914236947")
     const groupIdParts = groupId.split('_');
-    const timestamp = groupIdParts[groupIdParts.length - 1] || Date.now().toString();
+    const groupTimestamp = groupIdParts[groupIdParts.length - 1] || Date.now().toString();
     const nextExpenseNumber = String(group.expenses.length).padStart(3, '0');
-    const newExpenseId = `expen_${timestamp}_${nextExpenseNumber}`;
+    const newExpenseId = `expen_${groupTimestamp}_${Date.now().toString()}_${nextExpenseNumber}`;
 
-    const expense = {
-      id: newExpenseId,
+    const expenseIdValue = isEdit && expenseId ? expenseId : newExpenseId;
+    const expense: any = {
+      id: expenseIdValue,
       description: description.trim(),
       amount,
       category: selectedCategory,
@@ -118,14 +121,22 @@ const AddEditExpenseScreen = () => {
       date: dateText ? new Date(dateText).toISOString() : new Date().toISOString(),
     };
 
-    if (isEdit && expenseId) {
-      // Preserve the original id for update
-      const updated = { ...expense, id: expenseId } as any;
-      updateExpense(groupId, updated);
-    } else {
-      addExpense(groupId, expense as any);
+    // Save to GunDB first (same approach as addEditFavor with putFavor)
+    try {
+      const gun = getGun();
+      await putExpense(groupId, expense);
+    } catch (gunError) {
+      console.error('Error saving expense to GunDB:', gunError);
+      // Continue anyway, local store will be updated
     }
-    Alert.alert(t('alert.success'), 'Gasto añadido');
+
+    // Update local store
+    if (isEdit && expenseId) {
+      updateExpense(groupId, expense);
+    } else {
+      addExpense(groupId, expense);
+    }
+    Alert.alert(t('alert.success'), isEdit ? 'Gasto actualizado' : 'Gasto añadido');
     router.back();
   };
 

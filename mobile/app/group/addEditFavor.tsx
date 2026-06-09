@@ -93,10 +93,10 @@ const AddEditFavorScreen = () => {
     const groupIdParts = (groupId || '').split('_');
     const groupTimestamp = groupIdParts[groupIdParts.length - 1] || Date.now().toString();
     const nextFavorNumber = String(group.favors.length).padStart(3, '0');
-    const generatedFavorId = `favor_${groupTimestamp}_${nextFavorNumber}`;
+    const newFavorId = `favor_${groupTimestamp}_${Date.now().toString()}_${nextFavorNumber}`;
 
     try {
-      const favorIdValue = isEditMode && favorId ? favorId : generatedFavorId;
+      const favorIdValue = isEditMode && favorId ? favorId : newFavorId;
       const member = group.members.find(m => m.id === madeBy);
 
       if (!member) {
@@ -178,19 +178,27 @@ const AddEditFavorScreen = () => {
       }
 
       // Create the favor object (no groupId, the relationship is implicit via the parent group)
+      // IMPORTANT: Avoid setting fields to `undefined` - GunDB does not allow that.
+      // Only include optional fields when they have a real value.
       const favor: any = {
         id: favorIdValue,
         description: description.trim(),
         madeBy,
         date: dateISOString,
         isAIUsed: useIA,
-        manualScore: useIA ? undefined : manualScore ?? 0,
-        aiResponse: aiResponse ? {
+      };
+
+      if (!useIA) {
+        favor.manualScore = manualScore ?? 0;
+      }
+
+      if (aiResponse) {
+        favor.aiResponse = {
           score: aiResponse.score[madeBy] ?? 0,
           message: aiResponse.comment,
           nickname: aiResponse.nicknames[madeBy] || '',
-        } : undefined,
-      };
+        };
+      }
 
       // Save to GunDB
       try {

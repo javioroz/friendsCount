@@ -108,12 +108,21 @@ const updateGroupWithExpenses = (groupId: string, expenses: Expense[]) => {
   const group = groups.find((g) => g.id === groupId);
   
   if (group) {
+    // Deduplicate by id to avoid React duplicate-key warnings when multiple
+    // GunDB subscriptions fire for the same data
+    const seen = new Set<string>();
+    const uniqueExpenses = expenses.filter((e) => {
+      if (!e?.id || seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
+    });
+    
     // Recalculate balances when expenses change
     const balances = calculateBalancesFromExpenses(group);
     
     updateGroup(groupId, {
       ...group,
-      expenses,
+      expenses: uniqueExpenses,
       balances,
     });
   }
@@ -124,16 +133,25 @@ const updateGroupWithFavors = (groupId: string, favors: Favor[]) => {
   const group = groups.find((g) => g.id === groupId);
   
   if (group) {
+    // Deduplicate by id to avoid React duplicate-key warnings when multiple
+    // GunDB subscriptions fire for the same data
+    const seen = new Set<string>();
+    const uniqueFavors = favors.filter((f) => {
+      if (!f?.id || seen.has(f.id)) return false;
+      seen.add(f.id);
+      return true;
+    });
+    
     // Recalculate rankings when favors change
     const rankings = calculateRankingsFromFavors({
       members: group.members,
-      favors,
+      favors: uniqueFavors,
       rankings: group.rankings,
     });
     
     updateGroup(groupId, {
       ...group,
-      favors,
+      favors: uniqueFavors,
       rankings,
     });
   }

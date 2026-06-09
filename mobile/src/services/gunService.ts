@@ -91,9 +91,10 @@ export const subscribeToExpenses = (
 ) => {
   const expensesMap = new Map<string, Expense>();
   
-  getGroupRef(groupId).get('expenses').map().on((data: Expense | null, id: string) => {
+  getGroupRef(groupId).get('expenses').map().on((data: any, id: string) => {
     if (data) {
-      expensesMap.set(id, data);
+      const expense = deserializeFromGun(data) as Expense;
+      expensesMap.set(id, expense);
     } else {
       expensesMap.delete(id);
     }
@@ -170,6 +171,120 @@ export const putMember = (
 };
 
 /**
+ * Serialize an object so that it can be stored in GunDB.
+ * GunDB does not support native arrays inside `put`, so we convert
+ * every array field to a JSON string under a sibling key (`_json_<key>`).
+ * The reader (`deserializeFromGun`) reverses the process transparently.
+ */
+const serializeForGun = (value: any): any => {
+  if (value === null || value === undefined) return value;
+  if (Array.isArray(value)) {
+    // Mark with a sentinel key so the reader can detect it
+    return { __gun_array__: JSON.stringify(value) };
+  }
+  if (typeof value === 'object') {
+    const out: any = {};
+    for (const k of Object.keys(value)) {
+      out[k] = serializeForGun(value[k]);
+    }
+    return out;
+  }
+  return value;
+};
+
+/**
+ * Heuristic: does the value look like a serialized array?
+ * We accept three shapes GunDB has produced historically:
+ *   - real Array
+ *   - object with a `__gun_array__` sentinel holding a JSON string
+ *   - object whose own keys are sequential numeric strings "0","1","2"
+ *     (this is what GunDB returns when it round-trips a native array)
+ *   - object with a single `_` sub-key whose value is another object of the
+ *     same form (GunDB chain node pointing to the actual list)
+ */
+const hasNumericKeys = (value: any): boolean => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  return Object.keys(value).some((k) => /^\d+$/.test(k));
+};
+
+const keysAreOnlyGunMetadata = (value: any): boolean => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const keys = Object.keys(value);
+  return keys.length > 0 && keys.every((k) =>
+    k === '_' || k === '>' || k === ':' || k === '#' || /^\d+$/.test(k)
+  );
+};
+
+const gunChainToArray = (value: any): any[] => {
+  // 1) Unwrap a single `_` pointer if the chain object only carries metadata
+  //    pointing to the real list at value._.
+  let current: any = value;
+  // Walk through `>` (next) pointers if present
+  const collected: any[] = [];
+  // First try the simple indexed case
+  if (hasNumericKeys(current)) {
+    const keys = Object.keys(current)
+      .filter((k) => /^\d+$/.test(k))
+      .sort((a, b) => Number(a) - Number(b));
+    for (const k of keys) {
+      const v = current[k];
+      // GunDB may store the actual element under a sub-key (e.g. value[k]._)
+      if (v && typeof v === 'object' && '_' in v && typeof v._ === 'object' && hasNumericKeys(v._)) {
+        collected.push(...gunChainToArray(v._));
+      } else if (v && typeof v === 'object' && typeof v.__gun_array__ === 'string') {
+        try {
+          const parsed = JSON.parse(v.__gun_array__);
+          if (Array.isArray(parsed)) {
+            for (const item of parsed) collected.push(deserializeFromGun(item));
+            continue;
+          }
+        } catch { /* fall through */ }
+        collected.push(deserializeFromGun(v));
+      } else {
+        collected.push(deserializeFromGun(v));
+      }
+    }
+    return collected;
+  }
+  return collected;
+};
+
+const deserializeFromGun = (value: any): any => {
+  if (value === null || value === undefined) return value;
+  if (Array.isArray(value)) {
+    return value.map(deserializeFromGun);
+  }
+  if (typeof value === 'object') {
+    // 1) New format: serialized via our helper, stored under __gun_array__
+    if (typeof value.__gun_array__ === 'string') {
+      try {
+        const parsed = JSON.parse(value.__gun_array__);
+        if (Array.isArray(parsed)) return parsed.map(deserializeFromGun);
+      } catch {
+        // fall through
+      }
+    }
+    // 2) Indexed object (native array round-tripped through GunDB)
+    if (hasNumericKeys(value)) {
+      return gunChainToArray(value);
+    }
+    // 3) Empty object that is "only Gun metadata" – treat as []
+    if (keysAreOnlyGunMetadata(value) && Object.keys(value).every((k) => k !== '_' && k !== '>' && k !== ':' && k !== '#')) {
+      return [];
+    }
+    // 4) Plain object - recurse into fields
+    const out: any = {};
+    for (const k of Object.keys(value)) {
+      // Skip GunDB internal metadata
+      if (k === '_' || k === '>' || k === ':' || k === '#') continue;
+      out[k] = deserializeFromGun(value[k]);
+    }
+    return out;
+  }
+  return value;
+};
+
+/**
  * Save or update an expense
  */
 export const putExpense = (
@@ -177,7 +292,8 @@ export const putExpense = (
   expense: Expense
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
-    getGroupRef(groupId).get('expenses').get(expense.id).put(expense, (ack: any) => {
+    const payload = serializeForGun(expense);
+    getGroupRef(groupId).get('expenses').get(expense.id).put(payload, (ack: any) => {
       if (ack.err) reject(new Error(ack.err));
       else resolve();
     });
