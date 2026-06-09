@@ -117,10 +117,25 @@ export const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
     router.push(`./addEditFavor?groupId=${group.id}&favorId=${favorId}`);
   };
 
-  // Sort favors by date (most recent first) and group by date
+  // Sort favors by date (most recent first), then by id suffix within the same day
   const getGroupedFavors = () => {
+    const extractSuffixNumber = (id: string) => {
+      const match = id.match(/_(\d+)$/);
+      return match ? Number(match[1]) : 0;
+    };
+
     const sorted = [...group.favors].sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      if (dateA !== dateB) {
+        return dateB - dateA;
+      }
+      const suffixA = extractSuffixNumber(a.id);
+      const suffixB = extractSuffixNumber(b.id);
+      if (suffixA !== suffixB) {
+        return suffixB - suffixA;
+      }
+      return b.id.localeCompare(a.id);
     });
 
     let currentGroup: { date: string; label: string; favors: typeof sorted } | null = null;
@@ -194,7 +209,7 @@ export const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
                         </ThemedText>
                       </View>
                       <ThemedText style={[tabStyles.favorDetail, { color: colors.muted }]}>
-                        Por: {getMemberName(favor.madeBy)}
+                        Hecho por: {getMemberName(favor.madeBy)}
                       </ThemedText>
                       {favor.aiResponse && (
                         <View style={[tabStyles.aiResponse, { borderLeftColor: colors.primary, backgroundColor: colors.surface }]}>

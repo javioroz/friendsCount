@@ -268,6 +268,14 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
   const [isInfoModalVisible, setIsInfoModalVisible] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
+  // Sync currentBalances with group.balances whenever the group changes
+  // Only sync if no pending settlements to avoid losing local changes
+  React.useEffect(() => {
+    if (settlements.length === 0) {
+      setCurrentBalances(group.balances);
+    }
+  }, [group.balances, settlements]);
+
   const getMemberName = (memberId: string) => {
     return group.members.find((m) => m.id === memberId)?.name || 'Unknown';
   };
@@ -365,21 +373,12 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
     // Add the expense to the local store
     addExpense(group.id, settlementExpense);
 
-    // Update current balances
-    const newBalances = currentBalances.map(b => {
-      if (b.memberId === settlement.fromId) {
-        return { ...b, amount: Math.round((b.amount + settlement.amount) * 100) / 100 };
-      }
-      if (b.memberId === settlement.toId) {
-        return { ...b, amount: Math.round((b.amount - settlement.amount) * 100) / 100 };
-      }
-      return b;
-    });
-
     // Remove the settled transaction
     const newSettlements = settlements.filter((_, i) => i !== index);
 
-    setCurrentBalances(newBalances);
+    // Sync currentBalances with group.balances from the store
+    // This ensures we use the recalculated balances from the store
+    setCurrentBalances(group.balances);
     setSettlements(newSettlements);
   };
 

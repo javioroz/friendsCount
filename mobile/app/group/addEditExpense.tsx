@@ -66,7 +66,10 @@ const AddEditExpenseScreen = () => {
         setAmountText((exp.amount || 0).toFixed(2));
         setSelectedCategory(exp.category ?? '💰');
         setPaidBy(exp.paidBy);
-        setSelectedMembers(exp.sharedBy || group.members.map((m) => m.id));
+        const sharedMembers = Array.isArray(exp.sharedBy) 
+          ? exp.sharedBy 
+          : group.members.map((m) => m.id);
+        setSelectedMembers(sharedMembers);
         setDateText(exp.date ? exp.date.split('T')[0] : new Date().toISOString().split('T')[0]);
       }
     } else {

@@ -99,10 +99,25 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
     router.push(`./addEditExpense?groupId=${group.id}&expenseId=${expenseId}`);
   };
 
-  // Sort expenses by date (most recent first) and group by date
+  // Sort expenses by date (most recent first), then by id suffix within the same day
   const getGroupedExpenses = () => {
+    const extractSuffixNumber = (id: string) => {
+      const match = id.match(/_(\d+)$/);
+      return match ? Number(match[1]) : 0;
+    };
+
     const sorted = [...group.expenses].sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      if (dateA !== dateB) {
+        return dateB - dateA;
+      }
+      const suffixA = extractSuffixNumber(a.id);
+      const suffixB = extractSuffixNumber(b.id);
+      if (suffixA !== suffixB) {
+        return suffixB - suffixA;
+      }
+      return b.id.localeCompare(a.id);
     });
 
     let currentGroup: { date: string; label: string; expenses: typeof sorted } | null = null;
@@ -171,7 +186,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
                       </ThemedText>
                     </View>
                     <ThemedText style={[tabStyles.expenseDetail, { color: colors.muted }]}>
-                      {getMemberName(expense.paidBy)}
+                      Pagado por: {getMemberName(expense.paidBy)}
                     </ThemedText>
                   </TouchableOpacity>
                 ))}
