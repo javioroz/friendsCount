@@ -1,0 +1,68 @@
+[
+  {
+    "id": "group_mock1",
+    "name": "Viaje de amigos (ejemplo)",
+    "icon": "🚗",
+    "currency": "EUR",
+    "createdAt": "2026-05-30T12:00:00.000Z",
+    "members": [
+      { "id": "user_mock1_0", "name": "Carlos", "email": "carlos@example.com" },
+      { "id": "user_mock1_1", "name": "Alberto", "email": "alberto@example.com" },
+      { "id": "user_mock1_2", "name": "Elisa", "email": "elisa@example.com" }
+    ],
+    "expenses": [
+      {
+        "id": "expense_mock1_0",
+        "groupId": "group_mock1",
+        "description": "Cena en trattoria",
+        "amount": 45.5,
+        "paidBy": "user_mock1_0",
+        "sharedBy": ["user_mock1_0", "user_mock1_1", "user_mock1_2"],
+        "date": "2026-06-08T10:00:00.000Z",
+        "category": "🍔"
+      },
+      {
+        "id": "expense_mock1_1",
+        "groupId": "group_mock1",
+        "description": "Taxi al aeropuerto",
+        "amount": 23.0,
+        "paidBy": "user_mock1_1",
+        "sharedBy": ["user_mock1_0", "user_mock1_1"],
+        "date": "2026-06-07T10:00:00.000Z",
+        "category": "🚗"
+      }
+    ],
+    "favors": [
+      {
+        "id": "favor_mock1_0",
+        "groupId": "group_mock1",
+        "description": "Fregó el baño a las 3am",
+        "madeBy": "user_mock1_0",
+        "date": "2026-06-06T10:00:00.000Z",
+        "aiResponse": {
+          "score": 5,
+          "message": "Un héroe sin capa que limpió hasta la frustración. ¡Merece un monumento!",
+          "nickname": "El Fregón"
+        }
+      },
+      {
+        "id": "favor_mock1_1",
+        "groupId": "group_mock1",
+        "description": "Hizo la comida",
+        "madeBy": "user_mock1_1",
+        "date": "2026-06-06T10:00:00.000Z",
+        "manualScore": 2
+      }
+    ],
+    "balances": [
+      { "memberId": "user_mock1_0", "amount": 45.2 },
+      { "memberId": "user_mock1_1", "amount": -12.3 },
+      { "memberId": "user_mock1_2", "amount": -8.4 }
+    ],
+    "rankings": [
+      { "memberId": "user_mock1_0", "nickname": "El Fregón", "score": 5 },
+      { "memberId": "user_mock1_1", "nickname": "El Nuevo", "score": 2 },
+      { "memberId": "user_mock1_2", "nickname": "La Ausente", "score": 0 }
+    ]
+  }
+]
