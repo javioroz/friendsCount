@@ -81,8 +81,8 @@ Update your mobile app's environment variables:
 
 ```env
 # Production
-EXPO_PUBLIC_SERVER_URL=https://your-app.up.railway.app
-EXPO_PUBLIC_GUN_RELAY=wss://your-app.up.railway.app/gun
+SERVER_URL=https://your-app.up.railway.app
+GUN_RELAY=wss://your-app.up.railway.app/gun
 ```
 
 3. Rebuild your mobile app with these new environment variables.

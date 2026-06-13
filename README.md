@@ -140,7 +140,7 @@ cp mobile/.env mobile/.env.local
 
 Edita `mobile/.env.local`:
 ```env
-EXPO_PUBLIC_GUN_RELAY=ws://localhost:3001/gun
+GUN_RELAY=ws://localhost:3001/gun
 ```
 
 ## 📦 Comandos npm

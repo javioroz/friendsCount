@@ -22,7 +22,7 @@ const DebugScreen = () => {
 
   useEffect(() => {
     // Get Gun URL from environment or default
-    const gunRelayUrl = process.env.EXPO_PUBLIC_GUN_RELAY || 'ws://localhost:3001/gun';
+    const gunRelayUrl = process.env.GUN_RELAY || 'ws://localhost:3001/gun';
     setGunUrl(gunRelayUrl);
 
     // Check connection status

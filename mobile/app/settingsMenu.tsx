@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Modal, Text, Switch, ScrollView, StyleSheet, Platform, Alert as RNAlert } from 'react-native';
+import { View, TouchableOpacity, Modal, Text, Switch, ScrollView, StyleSheet, Platform, Alert as RNAlert, Image, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { useGroupStore } from '@/src/stores/groupStore';
@@ -7,6 +7,8 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/src/i18n/i18n';
+
+const BTC_ADDRESS = "bt1qk9fth93zngtxtyg72s5qjlsju78ufdltzqk4f0";
 
 interface SettingsMenuProps {
   visible: boolean;
@@ -36,7 +38,7 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
           </TouchableOpacity>
           <Text style={[styles.modalTitle, { color: colors.text }]}>{t('settings.settingsTitle')}</Text>
           <View style={styles.settingItem}>
-            <View style={styles.settingRow}>
+            <View style={styles.rowBetween}>
               <Text style={[styles.settingText, { color: colors.text }]}>{t('settings.darkMode')}</Text>
               <Switch
                 value={isDarkMode}
@@ -129,6 +131,14 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
             <Text style={[styles.modalText, { color: colors.text }]}>
               {t('settings.developerText')}
             </Text>
+            <View style={styles.rowBetween}>
+              <TouchableOpacity onPress={() => Linking.openURL(`https://live.blockcypher.com/btc/address/${BTC_ADDRESS}/`)}>
+                <Image source={require('../assets/bitcoin.jpg')} style={styles.developerImage} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://liberapay.com/PiratasLab/donate')}>
+                <Image source={require('../assets/donate.svg')} style={styles.developerImage} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
@@ -179,7 +189,7 @@ const styles = StyleSheet.create({
   settingItem: {
     marginBottom: 20,
   },
-  settingRow: {
+  rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
@@ -222,6 +232,13 @@ const styles = StyleSheet.create({
   exportButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  developerImage: {
+    width: 120,
+    height: 30,
+    alignSelf: 'center',
+    marginTop: 10,
+    borderRadius: 5,
   },
 });
 

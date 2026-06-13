@@ -1,13 +1,19 @@
+import dotenv from 'dotenv';
+import path from 'path';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import Gun from 'gun';
 import 'gun/axe';
-import path from 'path';
 import { collectMap, deserialize } from './gunHelpers';
+
+// Load .env from project root (monorepo setup)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const GUN_RELAY_HOST = process.env.GUN_RELAY_HOST || "localhost";
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Create HTTP server early so Gun can attach to it
 const server = http.createServer(app);
@@ -245,9 +251,9 @@ app.get('/api/groups/:groupId', async (req, res) => {
 // Start server
 server.listen(PORT, () => {
   console.log(`🚀 GunDB Relay Server running on port ${PORT}`);
-  console.log(`📡 WebSocket endpoint: ws://localhost:${PORT}/gun`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/health`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📡 WebSocket endpoint: ws://${GUN_RELAY_HOST}:${PORT}/gun`);
+  console.log(`🏥 Health check: http://${GUN_RELAY_HOST}:${PORT}/health`);
+  console.log(`🌍 Environment: ${NODE_ENV}`);
 });
 
 // Handle graceful shutdown

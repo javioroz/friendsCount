@@ -3,7 +3,7 @@ import 'gun/sea';
 import { Group, Expense, Favor, Member, MemberRanking } from '../types';
 
 // Configuration from environment
-const GUN_RELAY_URL = process.env.EXPO_PUBLIC_GUN_RELAY || 'ws://localhost:3001/gun';
+const GUN_RELAY_URL = process.env.GUN_RELAY || 'ws://localhost:3001/gun';
 
 // Singleton Gun instance
 // Using 'any' type as Gun is a schemaless database and proper typing is complex
