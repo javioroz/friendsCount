@@ -260,7 +260,7 @@ const modalStyles = StyleSheet.create({
   },
 });
 
-export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
+const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
   const { colors } = useTheme();
   const addExpense = useGroupStore((state) => state.addExpense);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
@@ -574,3 +574,5 @@ export const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
     </View>
   );
 };
+
+export default BalancesTab;

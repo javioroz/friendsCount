@@ -373,8 +373,8 @@ const styles = StyleSheet.create({
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
-    gap: 8,
+    marginBottom: 30,
+    gap: 6,
   },
   categoryButton: {
     width: '15%',

@@ -87,7 +87,7 @@ const tabStyles = StyleSheet.create({
   },
 });
 
-export const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
+const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
   const { colors } = useTheme();
   const router = useRouter();
 
@@ -198,3 +198,5 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
     </View>
   );
 };
+
+export default ExpensesTab;

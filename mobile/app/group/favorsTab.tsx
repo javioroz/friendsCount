@@ -105,7 +105,7 @@ const tabStyles = StyleSheet.create({
   },
 });
 
-export const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
+const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
   const { colors } = useTheme();
   const router = useRouter();
 
@@ -229,3 +229,5 @@ export const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
     </View>
   );
 };
+
+export default FavorsTab;

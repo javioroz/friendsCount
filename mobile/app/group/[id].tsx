@@ -14,10 +14,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import { ExpensesTab } from './expensesTab';
-import { BalancesTab } from './balancesTab';
-import { FavorsTab } from './favorsTab';
-import { RankingsTab } from './rankingTab';
+import ExpensesTab from './expensesTab';
+import BalancesTab from './balancesTab';
+import FavorsTab from './favorsTab';
+import RankingsTab from './rankingTab';
 import { useTranslation } from 'react-i18next';
 
 type TabType = 'expenses' | 'balances' | 'favors' | 'rankings';

@@ -188,7 +188,66 @@ const tabStyles = StyleSheet.create({
   },
 });
 
-export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modal: {
+    width: '80%',
+    maxWidth: 300,
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  winnerName: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  closeButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  infoContent: {
+    marginBottom: 24,
+    width: '100%',
+  },
+  infoParagraph: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+    textAlign: 'left',
+  },
+});
+
+const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
   const { colors } = useTheme();
   const [raffleResult, setRaffleResult] = useState<string | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -472,61 +531,4 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }
   );
 };
 
-const modalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modal: {
-    width: '80%',
-    maxWidth: 300,
-    padding: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  winnerName: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  closeButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    minWidth: 120,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  infoContent: {
-    marginBottom: 24,
-    width: '100%',
-  },
-  infoParagraph: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-    textAlign: 'left',
-  },
-});
+export default RankingsTab;

@@ -4,11 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { useGroupStore } from '@/src/stores/groupStore';
 import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/src/i18n/i18n';
 
-const BTC_ADDRESS = "bt1qk9fth93zngtxtyg72s5qjlsju78ufdltzqk4f0";
+const BTC_ADDRESS = "bt1qk9fth93zngtxtyg72s5qjlsju70ufdltzqk4f0";
 
 interface SettingsMenuProps {
   visible: boolean;
@@ -100,23 +99,17 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
                     return;
                   }
 
-                  if (Platform.OS === 'android') {
-                    try {
-                      const downloadsFile = new FileSystem.File(`file:///storage/emulated/0/Download`, fileName);
-                      downloadsFile.write(data, { encoding: 'utf8' });
-                      RNAlert.alert(t('settings.exportSuccess'), `${t('settings.exportedTo') || 'Exportado a'}: ${downloadsFile.uri}`);
-                      return;
-                    } catch (err) {
-                      console.warn('Direct Android download write failed, falling back to app document directory', err);
-                    }
-                  }
-
+                  // Save to app's document directory (always works without special permissions)
                   const file = new FileSystem.File(FileSystem.Paths.document, fileName);
-                  file.write(data, { encoding: 'utf8' });
-                  if (await Sharing.isAvailableAsync()) {
-                    await Sharing.shareAsync(file.uri, { mimeType: 'application/json' });
-                  }
-                  RNAlert.alert(t('settings.exportSuccess'), t('settings.checkShareOrDownloads'));
+                  await file.write(data, { encoding: 'utf8' });
+                  
+                  // Inform user where file is saved
+                  // Note: expo-sharing is not available in this build, but the file is saved
+                  RNAlert.alert(
+                    t('settings.exportSuccess'),
+                    `Archivo guardado en documentos de la app: ${file.uri}`
+                  );
+                  return;
                 } catch (error: any) {
                   console.error('Export error', error);
                   RNAlert.alert(t('alert.error'), t('settings.exportFailed') || 'No se pudo exportar la base de datos.');
@@ -132,11 +125,11 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
               {t('settings.developerText')}
             </Text>
             <View style={styles.rowBetween}>
-              <TouchableOpacity onPress={() => Linking.openURL(`https://live.blockcypher.com/btc/address/${BTC_ADDRESS}/`)}>
-                <Image source={require('../assets/bitcoin.jpg')} style={styles.developerImage} />
+              <TouchableOpacity onPress={() => Linking.openURL(`bitcoin:${BTC_ADDRESS}?amount=0.0001&label=Support_FriendsCount&message=Donation_to_FriendsCount`)} style={{ flex: 1, marginRight: 10 }}>
+                <Image source={require('../assets/bitcoin.png')} style={styles.developerImage} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL('https://liberapay.com/PiratasLab/donate')}>
-                <Image source={require('../assets/donate.svg')} style={styles.developerImage} />
+              <TouchableOpacity onPress={() => Linking.openURL('https://liberapay.com/PiratasLab/donate')} style={{ flex: 1, marginRight: 10 }}>
+                <Image source={require('../assets/donate.png')} style={styles.developerImage} />
               </TouchableOpacity>
             </View>
           </View>
