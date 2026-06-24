@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TouchableOpacity, Modal, Text, Switch, ScrollView, StyleSheet, Platform, Alert as RNAlert, Image, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/contexts/ThemeContext';
@@ -17,10 +17,14 @@ interface SettingsMenuProps {
 const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
   const { isDarkMode, colors, toggleTheme } = useTheme();
   const { t } = useTranslation();
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
 
   const changeLanguage = (lang: string) => {
     i18n.changeLanguage(lang);
+    setLanguageMenuOpen(false);
   };
+
+  const selectedLanguage = LANGUAGES.find((lang) => lang.code === i18n.language) ?? LANGUAGES[0];
 
   return (
     <Modal
@@ -49,31 +53,43 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
           </View>
           <View style={styles.settingItem}>
             <Text style={[styles.settingLabel, { color: colors.text }]}>{t('settings.language')}</Text>
-            <ScrollView horizontal={false} style={{ maxHeight: 320 }}>
-              {LANGUAGES.map((lang) => (
-                <TouchableOpacity
-                  key={lang.code}
-                  style={[
-                    styles.languageOption,
-                    i18n.language === lang.code && { backgroundColor: colors.primary + '20' },
-                  ]}
-                  onPress={() => changeLanguage(lang.code)}
-                >
-                  <Text
+            <TouchableOpacity
+              style={[
+                styles.languageSelectorButton,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.surface,
+                },
+              ]}
+              onPress={() => setLanguageMenuOpen((prev) => !prev)}
+            >
+              <Text style={[styles.languageSelectorText, { color: colors.text }]}>
+                {selectedLanguage.label}
+              </Text>
+              <Ionicons name={languageMenuOpen ? 'chevron-up' : 'chevron-down'} size={20} color={colors.text} />
+            </TouchableOpacity>
+
+            {languageMenuOpen && (
+              <View style={styles.languageDropdown}>
+                {LANGUAGES.filter((lang) => lang.code !== selectedLanguage.code).map((lang) => (
+                  <TouchableOpacity
+                    key={lang.code}
                     style={[
-                      styles.languageOptionText,
-                      { color: colors.text },
-                      i18n.language === lang.code && { fontWeight: 'bold', color: colors.primary },
+                      styles.languageOption,
+                      {
+                        borderColor: colors.border,
+                        backgroundColor: colors.surface,
+                      },
                     ]}
+                    onPress={() => changeLanguage(lang.code)}
                   >
-                    {lang.label}
-                  </Text>
-                  {i18n.language === lang.code && (
-                    <Ionicons name="checkmark" size={20} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                    <Text style={[styles.languageOptionText, { color: colors.text }]}>
+                      {lang.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
           <View style={styles.settingItem}>
             <Text style={[styles.settingLabel, { color: colors.text }]}>{t('settings.exportGroups')}</Text>
@@ -197,6 +213,22 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 10,
   },
+  languageSelectorButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 48,
+  },
+  languageSelectorText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  languageDropdown: {
+    marginTop: 8,
+  },
   languageOption: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -204,7 +236,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    marginBottom: 4,
+    borderWidth: 1,
+    marginBottom: 8,
   },
   languageOptionText: {
     fontSize: 15,
@@ -227,8 +260,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   developerImage: {
-    width: 120,
-    height: 30,
+    width: 100,
+    height: 25,
     alignSelf: 'center',
     marginTop: 10,
     borderRadius: 5,
