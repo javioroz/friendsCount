@@ -24,6 +24,14 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
     setLanguageMenuOpen(false);
   };
 
+  const openExternalUrl = async (url: string, errorMessage: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      RNAlert.alert(t('alert.error'), errorMessage);
+    }
+  };
+
   const selectedLanguage = LANGUAGES.find((lang) => lang.code === i18n.language) ?? LANGUAGES[0];
 
   return (
@@ -141,11 +149,27 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
               {t('settings.developerText')}
             </Text>
             <View style={styles.rowBetween}>
-              <TouchableOpacity onPress={() => Linking.openURL(`bitcoin:${BTC_ADDRESS}?amount=0.0001&label=Support_FriendsCount&message=Donation_to_FriendsCount`)} style={{ flex: 1, marginRight: 10 }}>
-                <Image source={require('../assets/bitcoin.png')} style={styles.developerImage} />
+              <TouchableOpacity
+                onPress={() =>
+                  openExternalUrl(
+                    `bitcoin:${BTC_ADDRESS}?amount=0.0001&label=Support_FriendsCount&message=Donation_to_FriendsCount`,
+                    t('settings.noBitcoinWallet', { address: BTC_ADDRESS })
+                  )
+                }
+                style={{ flex: 1, marginRight: 10 }}
+              >
+                <Image source={require('../../assets/bitcoin.png')} style={styles.developerImage} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL('https://liberapay.com/PiratasLab/donate')} style={{ flex: 1, marginRight: 10 }}>
-                <Image source={require('../assets/donate.png')} style={styles.developerImage} />
+              <TouchableOpacity
+                onPress={() =>
+                  openExternalUrl(
+                    'https://liberapay.com/PiratasLab/donate',
+                    t('settings.donationLinkFailed')
+                  )
+                }
+                style={{ flex: 1, marginRight: 10 }}
+              >
+                <Image source={require('../../assets/donate.png')} style={styles.developerImage} />
               </TouchableOpacity>
             </View>
           </View>

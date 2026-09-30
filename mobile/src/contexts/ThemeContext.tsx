@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
+import { getColors, useThemeStore } from '../stores/themeStore';
 
-interface ThemeColors {
+export interface ThemeColors {
   background: string;
   primary: string;
   secondary: string;
@@ -11,31 +12,10 @@ interface ThemeColors {
   muted: string;
 }
 
-const lightTheme: ThemeColors = {
-  background: '#dcebfeff',
-  primary: '#003888ff',
-  secondary: '#289dfeff',
-  text: '#374151',
-  headerBackground: '#003888ff',
-  surface: '#ffffff',
-  border: '#d1d5db',
-  muted: '#6b7280',
-};
-
-const darkTheme: ThemeColors = {
-  background: '#042340ff',
-  primary: '#00a7a9ff',
-  secondary: '#0081f9ff',
-  text: '#ffffff',
-  headerBackground: '#00a7a9ff',
-  surface: '#0b1a37',
-  border: '#1c3358',
-  muted: '#94a3b8',
-};
-
 interface ThemeContextType {
   isDarkMode: boolean;
   colors: ThemeColors;
+  hasHydrated: boolean;
   toggleTheme: () => void;
 }
 
@@ -54,17 +34,14 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const hasHydrated = useThemeStore((state) => state.hasHydrated);
+  const toggleTheme = useThemeStore((state) => state.toggleTheme);
 
-  const colors = isDarkMode ? darkTheme : lightTheme;
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  return (
-    <ThemeContext.Provider value={{ isDarkMode, colors, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo(
+    () => ({ isDarkMode, colors: getColors(isDarkMode), hasHydrated, toggleTheme }),
+    [isDarkMode, hasHydrated, toggleTheme]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

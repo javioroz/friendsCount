@@ -4,9 +4,9 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Link } from '@/src/components/Link';
 import { ThemedText } from '@/src/components/ThemedText';
@@ -60,7 +60,7 @@ const GroupsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <ThemedText style={[styles.subtitle, { color: colors.text }]}>{t('home.yourGroups')}</ThemedText>

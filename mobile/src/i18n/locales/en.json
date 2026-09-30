@@ -24,7 +24,9 @@
     "exportFailed": "Error exporting groups",
     "exportSuccess": "Export successful",
     "exportedToDownloads": "Groups exported to Downloads folder",
-    "checkShareOrDownloads": "JSON file shared or downloaded successfully"
+    "checkShareOrDownloads": "JSON file shared or downloaded successfully",
+    "noBitcoinWallet": "No Bitcoin wallet app was found on this device. You can donate by copying this address: {{address}}",
+    "donationLinkFailed": "The donation link could not be opened. Please check your internet connection."
   },
   "languages": {
     "es": "Español",

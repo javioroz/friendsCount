@@ -340,7 +340,7 @@ const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
     return (
       <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
         <TouchableOpacity style={tabStyles.backButton} onPress={handleBackToRankings}>
-          <ThemedText style={tabStyles.backButtonText}>← Volver a clasificación</ThemedText>
+          <ThemedText style={[tabStyles.backButtonText, { color: colors.text }]}>← Volver a clasificación</ThemedText>
         </TouchableOpacity>
 
         <ThemedText style={[tabStyles.sectionTitle, { color: colors.text, marginBottom: 16, fontSize: 18 }]}>

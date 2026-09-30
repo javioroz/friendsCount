@@ -6,7 +6,6 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "moduleResolution": "node",
     "types": ["node"]
   },
   "include": [

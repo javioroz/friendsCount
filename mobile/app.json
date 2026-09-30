@@ -6,7 +6,6 @@
     "scheme": "friendscount",
     "orientation": "portrait",
     "icon": "./assets/friendsCount_logo_light.png",
-    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

@@ -2,22 +2,22 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
   Text,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import ExpensesTab from './expensesTab';
-import BalancesTab from './balancesTab';
-import FavorsTab from './favorsTab';
-import RankingsTab from './rankingTab';
+import ExpensesTab from '@/src/components/group/expensesTab';
+import BalancesTab from '@/src/components/group/balancesTab';
+import FavorsTab from '@/src/components/group/favorsTab';
+import RankingsTab from '@/src/components/group/rankingTab';
 import { useTranslation } from 'react-i18next';
 
 type TabType = 'expenses' | 'balances' | 'favors' | 'rankings';
@@ -108,7 +108,7 @@ const GroupScreen = () => {
         }}
       />
       {group ? (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
           <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
             {activeTab === 'expenses' && (
               <ExpensesTab group={group} onAdd={handleAddExpense} />
@@ -164,7 +164,7 @@ const GroupScreen = () => {
           </View>
         </SafeAreaView>
       ) : (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
           <ThemedText style={{ color: colors.text }}>Grupo no encontrado</ThemedText>
         </SafeAreaView>
       )}

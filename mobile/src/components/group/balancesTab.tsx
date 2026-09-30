@@ -403,7 +403,7 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
     return (
       <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
         <TouchableOpacity style={tabStyles.backButton} onPress={handleBackToBalances}>
-          <ThemedText style={tabStyles.backButtonText}>← Volver a saldos</ThemedText>
+          <ThemedText style={[tabStyles.backButtonText, { color: colors.text }]}>← Volver a saldos</ThemedText>
         </TouchableOpacity>
 
         <ThemedText style={[tabStyles.sectionTitle, { color: colors.text, marginBottom: 16, fontSize: 18 }]}>

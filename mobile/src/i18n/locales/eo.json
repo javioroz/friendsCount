@@ -17,7 +17,9 @@
     "darkMode": "Toggle dark / light mode",
     "language": "Language",
     "developerInfo": "Developer information:",
-    "developerText": "This app was developed by PiratasLab, if you like it buy us a coffee."
+    "developerText": "This app was developed by PiratasLab, if you like it buy us a coffee.",
+    "noBitcoinWallet": "Ne estas aparato troviĝis aplikaĵo por Bitcoin-monujo. Vi povas donaci kopiant ĉi tiun adreson: {{address}}",
+    "donationLinkFailed": "Ne eblis malfermi la donan ligilon. Bonvolu kontroli vian interretan konekton."
   },
   "languages": {
     "es": "Español",

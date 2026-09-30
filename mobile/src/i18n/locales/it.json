@@ -17,7 +17,9 @@
     "darkMode": "Toggle dark / light mode",
     "language": "Language",
     "developerInfo": "Developer information:",
-    "developerText": "This app was developed by PiratasLab, if you like it buy us a coffee."
+    "developerText": "This app was developed by PiratasLab, if you like it buy us a coffee.",
+    "noBitcoinWallet": "Nessuna app per il portafoglio Bitcoin trovata su questo dispositivo. Puoi donare copiando questo indirizzo: {{address}}",
+    "donationLinkFailed": "Impossibile aprire il link della donazione. Controlla la connessione a internet."
   },
   "languages": {
     "es": "Español",

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -11,6 +10,7 @@ import {
   Switch,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
@@ -252,7 +252,7 @@ const AddEditFavorScreen = () => {
 
   if (!group) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
         <ThemedText style={{ color: colors.text, margin: 16 }}>Grupo no encontrado</ThemedText>
       </SafeAreaView>
     );
@@ -261,7 +261,7 @@ const AddEditFavorScreen = () => {
   return (
     <>
       <Stack.Screen options={{ title: isEditMode ? t('favors.edit') : t('favors.add') }} />
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: colors.text }]}>{t('favors.description')}</ThemedText>

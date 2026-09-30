@@ -12,6 +12,8 @@ out/
 # Expo
 .expo/
 web-build/
+*.apk
+*.aab
 *.jks
 *.p8
 *.p12
@@ -19,6 +21,11 @@ web-build/
 *.mobileprovision
 *.orig.*
 *.hprof
+
+# Native projects: generadas por `npx expo prebuild` desde mobile/app.json
+# No versionarlas; EAS Build las regenera y así app.json manda de verdad.
+mobile/android/
+mobile/ios/
 
 # Metro
 .metro-health-check*

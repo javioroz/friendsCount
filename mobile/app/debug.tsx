@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, View, Text, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ScrollView, View, Text, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { Stack } from 'expo-router';
 import { getGun, checkConnection } from '@/src/services/gunService';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme, type ThemeColors } from '@/src/contexts/ThemeContext';
 
 interface GunGroup {
   id: string;
@@ -16,6 +18,8 @@ interface GunGroup {
 
 const DebugScreen = () => {
   const { groups, currentGroupId } = useGroupStore();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [gunConnectionStatus, setGunConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [gunUrl, setGunUrl] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -78,7 +82,7 @@ const DebugScreen = () => {
           headerBackTitle: 'Atrás',
         }}
       />
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
           {/* GunDB Connection Status */}
           <View style={styles.section}>
@@ -183,135 +187,136 @@ const DebugScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  content: {
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#666',
-    marginTop: 12,
-  },
-  infoCard: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  label: {
-    fontSize: 14,
-    color: '#666',
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-    textAlign: 'right',
-    marginLeft: 8,
-  },
-  statusCard: {
-    padding: 12,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  statusCardSuccess: {
-    backgroundColor: '#d1fae5',
-    borderWidth: 1,
-    borderColor: '#10b981',
-  },
-  statusCardWarning: {
-    backgroundColor: '#fef3c7',
-    borderWidth: 1,
-    borderColor: '#f59e0b',
-  },
-  statusCardError: {
-    backgroundColor: '#fee2e2',
-    borderWidth: 1,
-    borderColor: '#ef4444',
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  groupCard: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  groupHeader: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  groupInfo: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 4,
-  },
-  currentBadge: {
-    backgroundColor: '#10b981',
-    color: '#fff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    fontSize: 12,
-    fontWeight: '600',
-    alignSelf: 'flex-start',
-    marginTop: 8,
-  },
-  emptyCard: {
-    backgroundColor: '#fff',
-    padding: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#999',
-    fontStyle: 'italic',
-  },
-  jsonContainer: {
-    backgroundColor: '#1e293b',
-    padding: 12,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  jsonText: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#e2e8f0',
-    lineHeight: 14,
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: 16,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 12,
+      color: colors.text,
+    },
+    subtitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 8,
+      color: colors.muted,
+      marginTop: 12,
+    },
+    infoCard: {
+      backgroundColor: colors.surface,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 8,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    label: {
+      fontSize: 14,
+      color: colors.muted,
+    },
+    value: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      flex: 1,
+      textAlign: 'right',
+      marginLeft: 8,
+    },
+    statusCard: {
+      padding: 12,
+      borderRadius: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+    },
+    statusCardSuccess: {
+      backgroundColor: '#d1fae5',
+      borderWidth: 1,
+      borderColor: '#10b981',
+    },
+    statusCardWarning: {
+      backgroundColor: '#fef3c7',
+      borderWidth: 1,
+      borderColor: '#f59e0b',
+    },
+    statusCardError: {
+      backgroundColor: '#fee2e2',
+      borderWidth: 1,
+      borderColor: '#ef4444',
+    },
+    statusText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    groupCard: {
+      backgroundColor: colors.surface,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    groupHeader: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    groupInfo: {
+      fontSize: 13,
+      color: colors.muted,
+      marginBottom: 4,
+    },
+    currentBadge: {
+      backgroundColor: '#10b981',
+      color: '#fff',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+      fontSize: 12,
+      fontWeight: '600',
+      alignSelf: 'flex-start',
+      marginTop: 8,
+    },
+    emptyCard: {
+      backgroundColor: colors.surface,
+      padding: 24,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: 14,
+      color: colors.muted,
+      fontStyle: 'italic',
+    },
+    jsonContainer: {
+      backgroundColor: '#1e293b',
+      padding: 12,
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    jsonText: {
+      fontFamily: 'monospace',
+      fontSize: 11,
+      color: '#e2e8f0',
+      lineHeight: 14,
+    },
+  });
 
 export default DebugScreen;

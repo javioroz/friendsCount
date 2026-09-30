@@ -1,9 +1,11 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider, useTheme } from '@/src/contexts/ThemeContext';
-import SettingsMenu from './settingsMenu';
+import { useThemeStore } from '@/src/stores/themeStore';
+import SettingsMenu from '@/src/components/settingsMenu';
 
 const HeaderRightButton = ({ onPress }: { onPress: () => void }) => {
   return (
@@ -14,8 +16,12 @@ const HeaderRightButton = ({ onPress }: { onPress: () => void }) => {
 };
 
 const AppContent = () => {
-  const { isDarkMode, colors, toggleTheme } = useTheme();
+  const { isDarkMode, colors, hasHydrated, toggleTheme } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  if (!hasHydrated) {
+    return <View style={[styles.container, { backgroundColor: colors.background }]} />;
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -29,7 +35,7 @@ const AppContent = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-          headerShown: !route.name?.startsWith('group'),
+          headerShown: route.name === 'index',
         })}
       >
         <Stack.Screen
@@ -51,6 +57,7 @@ const AppContent = () => {
           options={{
             title: 'Crear grupo',
             headerBackTitle: 'Atrás',
+            headerShown: true,
           }}
         />
         <Stack.Screen
@@ -58,6 +65,7 @@ const AppContent = () => {
           options={{
             title: 'Unirse a grupo',
             headerBackTitle: 'Atrás',
+            headerShown: true,
           }}
         />
         <Stack.Screen
@@ -65,6 +73,7 @@ const AppContent = () => {
           options={{
             title: 'Debug - Store Local',
             headerBackTitle: 'Atrás',
+            headerShown: true,
           }}
         />
       </Stack>
@@ -73,10 +82,14 @@ const AppContent = () => {
 };
 
 const RootLayout = () => {
+  const hasHydrated = useThemeStore((state) => state.hasHydrated);
+
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <SafeAreaProvider initialMetrics={hasHydrated ? initialWindowMetrics : null}>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 };
 

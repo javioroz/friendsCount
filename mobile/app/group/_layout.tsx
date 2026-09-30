@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { ThemeProvider, useTheme } from '@/src/contexts/ThemeContext';
+import { useTheme } from '@/src/contexts/ThemeContext';
 import React from 'react';
 
-const GroupLayoutInner = () => {
+const GroupLayout = () => {
   const { colors } = useTheme();
 
   return (
@@ -16,16 +16,8 @@ const GroupLayoutInner = () => {
           fontWeight: 'bold',
         },
       }}
-    >
-      {/* Group screen will be rendered by [id].tsx */}
-    </Stack>
+    />
   );
 };
 
-export default function GroupLayout() {
-  return (
-    <ThemeProvider>
-      <GroupLayoutInner />
-    </ThemeProvider>
-  );
-}
+export default GroupLayout;
