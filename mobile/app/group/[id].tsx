@@ -165,7 +165,7 @@ const GroupScreen = () => {
         </SafeAreaView>
       ) : (
         <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
-          <ThemedText style={{ color: colors.text }}>Grupo no encontrado</ThemedText>
+          <ThemedText style={{ color: colors.text }}>{t('app.groupNotFound')}</ThemedText>
         </SafeAreaView>
       )}
     </>

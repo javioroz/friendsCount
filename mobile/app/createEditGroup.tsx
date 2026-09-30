@@ -100,13 +100,13 @@ const CreateEditGroupScreen = () => {
     
     if (!groupName.trim()) {
       console.log('🔴 Error: nombre de grupo vacío');
-      Alert.alert(t('alert.error'), 'Por favor ingresa el nombre del grupo');
+      Alert.alert(t('alert.error'), t('createEditGroup.noGroupName'));
       return;
     }
 
     if (isEditMode) {
       if (!group) {
-        Alert.alert(t('alert.error'), 'Grupo no encontrado');
+        Alert.alert(t('alert.error'), t('createEditGroup.groupNotFound'));
         return;
       }
 
@@ -127,7 +127,7 @@ const CreateEditGroupScreen = () => {
 
       if (validMembers.length === 0) {
         console.log('🔴 Error: no hay miembros válidos');
-        Alert.alert(t('alert.error'), 'Por favor agrega al menos un participante');
+        Alert.alert(t('alert.error'), t('createEditGroup.noParticipants'));
         return;
       }
 
@@ -195,7 +195,7 @@ const CreateEditGroupScreen = () => {
       }
 
       updateGroup(group.id, updatedGroup);
-      Alert.alert(t('alert.success'), 'Ajustes guardados correctamente');
+      Alert.alert(t('alert.success'), t('createEditGroup.settingsSaved'));
       router.back();
       return;
     }
@@ -214,7 +214,7 @@ const CreateEditGroupScreen = () => {
 
     if (validMembers.length === 0) {
       console.log('🔴 Error: no hay miembros válidos');
-      Alert.alert(t('alert.error'), 'Por favor agrega al menos un participante');
+      Alert.alert(t('alert.error'), t('createEditGroup.noParticipants'));
       return;
     }
 
@@ -309,7 +309,7 @@ const CreateEditGroupScreen = () => {
       console.log('🟢 GunDB put completado exitosamente');
     } catch (error: any) {
       console.error('🔴 Error saving group to GunDB:', error);
-      Alert.alert(t('alert.error'), 'No se pudo guardar el grupo en el servidor. Se guardará solo localmente.');
+      Alert.alert(t('alert.error'), t('createEditGroup.serverSaveError'));
     }
 
     console.log('🟢 Antes de addGroup, grupos en store:', useGroupStore.getState().groups.length);
@@ -325,7 +325,7 @@ const CreateEditGroupScreen = () => {
     console.log('🟢 Llamando a router.back()');
     router.back();
     setTimeout(() => {
-      Alert.alert(t('alert.success'), 'Grupo creado correctamente');
+      Alert.alert(t('alert.success'), t('createEditGroup.groupCreated'));
     }, 100);
   };
 
@@ -670,7 +670,7 @@ const CreateEditGroupScreen = () => {
           <View style={[apiModalStyles.modal, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={apiModalStyles.header}>
               <ThemedText style={[apiModalStyles.title, { color: colors.text }]}>
-                ℹ️ Cómo obtener tu API Key
+                {t('createEditGroup.apiInfoTitle')}
               </ThemedText>
               <TouchableOpacity onPress={() => setShowApiInfoModal(false)}>
                 <Ionicons name="close" size={24} color={colors.text} />
@@ -684,7 +684,7 @@ const CreateEditGroupScreen = () => {
                   <ThemedText style={[apiModalStyles.providerName, { color: colors.text }]}>🤖 OpenAI (GPT)</ThemedText>
                 </View>
                 <ThemedText style={[apiModalStyles.description, { color: colors.muted }]}>
-                  Crea una cuenta en OpenAI y genera una API key en el dashboard.
+                  {t('createEditGroup.apiInfoOpenAI')}
                 </ThemedText>
                 <TouchableOpacity
                   style={[apiModalStyles.linkButton, { borderColor: colors.primary }]}
@@ -702,7 +702,7 @@ const CreateEditGroupScreen = () => {
                   <ThemedText style={[apiModalStyles.providerName, { color: colors.text }]}>🧠 Claude (Anthropic)</ThemedText>
                 </View>
                 <ThemedText style={[apiModalStyles.description, { color: colors.muted }]}>
-                  Regístrate en Anthropic y crea una API key desde tu perfil.
+                  {t('createEditGroup.apiInfoClaude')}
                 </ThemedText>
                 <TouchableOpacity
                   style={[apiModalStyles.linkButton, { borderColor: colors.primary }]}
@@ -720,7 +720,7 @@ const CreateEditGroupScreen = () => {
                   <ThemedText style={[apiModalStyles.providerName, { color: colors.text }]}>💎 Gemini (Google)</ThemedText>
                 </View>
                 <ThemedText style={[apiModalStyles.description, { color: colors.muted }]}>
-                  Obtén una API key de Gemini desde Google AI Studio.
+                  {t('createEditGroup.apiInfoGemini')}
                 </ThemedText>
                 <TouchableOpacity
                   style={[apiModalStyles.linkButton, { borderColor: colors.primary }]}
@@ -734,7 +734,7 @@ const CreateEditGroupScreen = () => {
 
               <View style={apiModalStyles.infoBox}>
                 <ThemedText style={[apiModalStyles.infoText, { color: colors.muted }]}>
-                  💡 Una vez obtenida la API key, pégala en el campo "LLM API Key" y guarda los ajustes del grupo.
+                  {t('createEditGroup.apiInfoNote')}
                 </ThemedText>
               </View>
             </ScrollView>

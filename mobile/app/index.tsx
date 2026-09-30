@@ -80,7 +80,7 @@ const GroupsScreen = () => {
                   <ThemedText style={[styles.groupName, { color: colors.text }]}>{group.meta.name}</ThemedText>
                 </View>
                 <ThemedText style={[styles.memberCount, { color: colors.muted }]}> 
-                  {group.members.length} miembro{group.members.length !== 1 ? 's' : ''}
+                  {t('home.membersCount', { count: group.members.length })}
                 </ThemedText>
               </View>
               <View style={styles.groupArrow}>

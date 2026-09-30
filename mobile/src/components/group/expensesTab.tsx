@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useTheme } from '@/src/contexts/ThemeContext';
 
@@ -88,11 +89,12 @@ const tabStyles = StyleSheet.create({
 });
 
 const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
 
   const getMemberName = (memberId: string) => {
-    return group.members.find((m) => m.id === memberId)?.name || 'Unknown';
+    return group.members.find((m) => m.id === memberId)?.name || t('app.unknown');
   };
 
   const handleExpensePress = (expenseId: string) => {
@@ -133,9 +135,9 @@ const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
 
       let label: string;
       if (dateObj.toDateString() === today.toDateString()) {
-        label = 'Hoy';
+        label = t('app.today');
       } else if (dateObj.toDateString() === yesterday.toDateString()) {
-        label = 'Ayer';
+        label = t('app.yesterday');
       } else {
         label = dateKey; // Use YYYY-MM-DD format
       }
@@ -158,7 +160,7 @@ const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
         <View style={tabStyles.expensesList}>
           {groupedExpenses.length === 0 ? (
             <ThemedText style={[tabStyles.expenseDetail, { color: colors.muted, textAlign: 'center', marginTop: 20 }]}>
-              No hay gastos registrados aún
+              {t('expenses.noExpenses')}
             </ThemedText>
           ) : (
             groupedExpenses.map((group) => (
@@ -186,7 +188,7 @@ const ExpensesTab: React.FC<ExpensesTabProps> = ({ group, onAdd }) => {
                       </ThemedText>
                     </View>
                     <ThemedText style={[tabStyles.expenseDetail, { color: colors.muted }]}>
-                      Pagado por: {getMemberName(expense.paidBy)}
+                      {t('expenses.paidBy')} {getMemberName(expense.paidBy)}
                     </ThemedText>
                   </TouchableOpacity>
                 ))}

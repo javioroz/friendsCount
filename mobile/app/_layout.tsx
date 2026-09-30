@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { ThemeProvider, useTheme } from '@/src/contexts/ThemeContext';
 import { useThemeStore } from '@/src/stores/themeStore';
+import { useLanguageStore } from '@/src/stores/languageStore';
 import SettingsMenu from '@/src/components/settingsMenu';
 
 const HeaderRightButton = ({ onPress }: { onPress: () => void }) => {
@@ -17,9 +19,12 @@ const HeaderRightButton = ({ onPress }: { onPress: () => void }) => {
 
 const AppContent = () => {
   const { isDarkMode, colors, hasHydrated, toggleTheme } = useTheme();
+  const { t } = useTranslation();
+  const languageHydrated = useLanguageStore((state) => state.hasHydrated);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  if (!hasHydrated) {
+  // Rendering before the stored language loads would flash the default copy.
+  if (!hasHydrated || !languageHydrated) {
     return <View style={[styles.container, { backgroundColor: colors.background }]} />;
   }
 
@@ -55,24 +60,24 @@ const AppContent = () => {
         <Stack.Screen
           name="createEditGroup"
           options={{
-            title: 'Crear grupo',
-            headerBackTitle: 'Atrás',
+            title: t('header.createGroup'),
+            headerBackTitle: t('header.back'),
             headerShown: true,
           }}
         />
         <Stack.Screen
           name="joinGroup"
           options={{
-            title: 'Unirse a grupo',
-            headerBackTitle: 'Atrás',
+            title: t('header.joinGroup'),
+            headerBackTitle: t('header.back'),
             headerShown: true,
           }}
         />
         <Stack.Screen
           name="debug"
           options={{
-            title: 'Debug - Store Local',
-            headerBackTitle: 'Atrás',
+            title: t('header.debug'),
+            headerBackTitle: t('header.back'),
             headerShown: true,
           }}
         />

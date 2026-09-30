@@ -87,7 +87,7 @@ const AddEditExpenseScreen = () => {
 
   const handleAddExpense = async () => {
     if (!groupId || !group) {
-      Alert.alert( t('alert.error'), 'Grupo no encontrado');
+      Alert.alert(t('alert.error'), t('expenses.groupNotFound'));
       return;
     }
 
@@ -98,12 +98,12 @@ const AddEditExpenseScreen = () => {
 
     const amount = parseFloat(parseFloat(amountText || '0').toFixed(2));
     if (!amount || amount <= 0) {
-      Alert.alert( t('alert.error'), 'Por favor ingresa un importe válido');
+      Alert.alert(t('alert.error'), t('expenses.invalidAmount'));
       return;
     }
 
     if (!paidBy) {
-      Alert.alert( t('alert.error'), 'Selecciona quién pagó');
+      Alert.alert(t('alert.error'), t('expenses.selectWhoPaid'));
       return;
     }
 
@@ -139,13 +139,13 @@ const AddEditExpenseScreen = () => {
     } else {
       addExpense(groupId, expense);
     }
-    Alert.alert(t('alert.success'), isEdit ? 'Gasto actualizado' : 'Gasto añadido');
+    Alert.alert(t('alert.success'), isEdit ? t('expenses.updated') : t('expenses.added'));
     router.back();
   };
 
   const handleDeleteExpense = () => {
     if (!groupId || !expenseId) {
-      Alert.alert( t('expenses.error'), 'No se pudo eliminar el gasto. Inténtalo de nuevo.');
+      Alert.alert( t('expenses.error'), t('expenses.deleteError'));
       return;
     }
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface Member {
   id: string;
@@ -256,7 +256,7 @@ const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
   const { t } = useTranslation();
 
   const getMemberName = (memberId: string) => {
-    return group.members.find((m) => m.id === memberId)?.name || 'Unknown';
+    return group.members.find((m) => m.id === memberId)?.name || t('app.unknown');
   };
 
   // Filter favors made by the selected member
@@ -340,16 +340,16 @@ const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
     return (
       <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
         <TouchableOpacity style={tabStyles.backButton} onPress={handleBackToRankings}>
-          <ThemedText style={[tabStyles.backButtonText, { color: colors.text }]}>← Volver a clasificación</ThemedText>
+          <ThemedText style={[tabStyles.backButtonText, { color: colors.text }]}>{t('rankings.backToRankings')}</ThemedText>
         </TouchableOpacity>
 
         <ThemedText style={[tabStyles.sectionTitle, { color: colors.text, marginBottom: 16, fontSize: 18 }]}>
-          Favores de {getMemberName(selectedMemberId)}
+          {t('rankings.favorsOf', { name: getMemberName(selectedMemberId) })}
         </ThemedText>
 
         {memberFavors.length === 0 ? (
           <ThemedText style={[tabStyles.favorDetail, { color: colors.muted, textAlign: 'center', marginTop: 24 }]}>
-            No hay favores registrados para este miembro
+            {t('rankings.noFavorsForMember')}
           </ThemedText>
         ) : (
           <View style={tabStyles.favorsList}>
@@ -382,7 +382,7 @@ const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
                     {favor.isAIUsed && (
                       <View style={[tabStyles.aiBadge, { backgroundColor: colors.primary + '20' }]}>
                         <ThemedText style={[tabStyles.aiBadge, { color: colors.primary, fontSize: 10 }]}>
-                          IA
+                          {t('rankings.aiBadge')}
                         </ThemedText>
                       </View>
                     )}
@@ -394,7 +394,7 @@ const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
         )}
 
         <View style={[tabStyles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 16 }]}>
-          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>Puntuación total</ThemedText>
+          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>{t('rankings.totalScore')}</ThemedText>
           <ThemedText style={[tabStyles.favorScore, { color: colors.primary, fontSize: 24, marginTop: 8 }]}>
             {totalScore > 0 ? '+' : ''}{totalScore}
           </ThemedText>
@@ -471,19 +471,19 @@ const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
         <View style={[modalStyles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
           <View style={[modalStyles.modal, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <ThemedText style={[modalStyles.modalTitle, { color: colors.text }]}>
-              🎉 ¡Resultado del Sorteo!
+              {t('rankings.raffleResultTitle')}
             </ThemedText>
             <ThemedText style={[modalStyles.winnerName, { color: colors.primary }]}>
               {raffleResult}
             </ThemedText>
             <ThemedText style={[modalStyles.modalSubtitle, { color: colors.muted }]}>
-              Ha sido elegido/a para el próximo sorteo
+              {t('rankings.hasBeenChosen')}
             </ThemedText>
             <TouchableOpacity
               style={[modalStyles.closeButton, { backgroundColor: colors.primary }]}
               onPress={closeModal}
             >
-              <ThemedText style={modalStyles.closeButtonText}>Cerrar</ThemedText>
+              <ThemedText style={modalStyles.closeButtonText}>{t('app.close')}</ThemedText>
             </TouchableOpacity>
           </View>
         </View>
@@ -499,30 +499,43 @@ const RankingsTab: React.FC<RankingsTabProps> = ({ group, onStartRaffle }) => {
         <View style={[modalStyles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
           <View style={[modalStyles.modal, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <ThemedText style={[modalStyles.modalTitle, { color: colors.text }]}>
-              ℹ️ Cómo funciona el sorteo
+              {t('rankings.howItWorks')}
             </ThemedText>
             <View style={modalStyles.infoContent}>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                El sorteo utiliza un sistema ponderado inverso para seleccionar al ganador:
+                {t('rankings.howItWorksIntro')}
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                • Los miembros con <ThemedText style={{ fontWeight: '700', color: colors.primary }}>más puntos</ThemedText> tienen <ThemedText style={{ fontWeight: '700', color: '#ef4444' }}>menos probabilidad</ThemedText> de ser elegidos.
+                <Trans
+                  i18nKey="rankings.ruleMore"
+                  components={{
+                    morePoints: <ThemedText style={{ fontWeight: '700', color: colors.primary }} />,
+                    lessProbability: <ThemedText style={{ fontWeight: '700', color: '#ef4444' }} />,
+                  }}
+                />
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                • Los miembros con <ThemedText style={{ fontWeight: '700', color: colors.primary }}>menos puntos</ThemedText> tienen <ThemedText style={{ fontWeight: '700', color: '#22c55e' }}>más probabilidad</ThemedText> de ser elegidos.
+                <Trans
+                  i18nKey="rankings.ruleLess"
+                  components={{
+                    lessPoints: <ThemedText style={{ fontWeight: '700', color: colors.primary }} />,
+                    moreProbability: <ThemedText style={{ fontWeight: '700', color: '#22c55e' }} />,
+                  }}
+                />
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                Esto asegura que las tareas se distribuyan de manera más equitativa entre todos los miembros del grupo.
+                {t('rankings.fairDistribution')}
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                <ThemedText style={{ fontWeight: '600' }}>Nota:</ThemedText> Los miembros con 0 puntos se consideran como si tuvieran 1 punto para el cálculo.
+                <ThemedText style={{ fontWeight: '600' }}>{t('rankings.note')}</ThemedText>{' '}
+                {t('rankings.zeroPoints')}
               </ThemedText>
             </View>
             <TouchableOpacity
               style={[modalStyles.closeButton, { backgroundColor: colors.primary }]}
               onPress={closeInfoModal}
             >
-              <ThemedText style={modalStyles.closeButtonText}>Cerrar</ThemedText>
+              <ThemedText style={modalStyles.closeButtonText}>{t('app.close')}</ThemedText>
             </TouchableOpacity>
           </View>
         </View>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useTheme } from '@/src/contexts/ThemeContext';
 
@@ -106,11 +107,12 @@ const tabStyles = StyleSheet.create({
 });
 
 const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
 
   const getMemberName = (memberId: string) => {
-    return group.members.find((m) => m.id === memberId)?.name || 'Unknown';
+    return group.members.find((m) => m.id === memberId)?.name || t('app.unknown');
   };
 
   const handleFavorPress = (favorId: string) => {
@@ -151,9 +153,9 @@ const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
 
       let label: string;
       if (dateObj.toDateString() === today.toDateString()) {
-        label = 'Hoy';
+        label = t('app.today');
       } else if (dateObj.toDateString() === yesterday.toDateString()) {
-        label = 'Ayer';
+        label = t('app.yesterday');
       } else {
         label = dateKey; // Use YYYY-MM-DD format
       }
@@ -176,7 +178,7 @@ const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
         <View style={tabStyles.favorsList}>
           {groupedFavors.length === 0 ? (
             <ThemedText style={[tabStyles.emptyText, { color: colors.muted }]}>
-              No hay favores registrados aún
+              {t('favors.noFavors')}
             </ThemedText>
           ) : (
             groupedFavors.map((group) => (
@@ -209,7 +211,7 @@ const FavorsTab: React.FC<FavorsTabProps> = ({ group, onAdd }) => {
                         </ThemedText>
                       </View>
                       <ThemedText style={[tabStyles.favorDetail, { color: colors.muted }]}>
-                        Hecho por: {getMemberName(favor.madeBy)}
+                        {t('favors.madeBy')}: {getMemberName(favor.madeBy)}
                       </ThemedText>
                       {favor.aiResponse && (
                         <View style={[tabStyles.aiResponse, { borderLeftColor: colors.primary, backgroundColor: colors.surface }]}>

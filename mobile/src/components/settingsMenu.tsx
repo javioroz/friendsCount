@@ -6,6 +6,7 @@ import { useGroupStore } from '@/src/stores/groupStore';
 import * as FileSystem from 'expo-file-system';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/src/i18n/i18n';
+import { useLanguageStore, type LanguageCode } from '@/src/stores/languageStore';
 
 const BTC_ADDRESS = "bt1qk9fth93zngtxtyg72s5qjlsju70ufdltzqk4f0";
 
@@ -17,10 +18,11 @@ interface SettingsMenuProps {
 const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
   const { isDarkMode, colors, toggleTheme } = useTheme();
   const { t } = useTranslation();
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
 
-  const changeLanguage = (lang: string) => {
-    i18n.changeLanguage(lang);
+  const changeLanguage = (lang: LanguageCode) => {
+    setLanguage(lang);
     setLanguageMenuOpen(false);
   };
 
@@ -131,12 +133,12 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
                   // Note: expo-sharing is not available in this build, but the file is saved
                   RNAlert.alert(
                     t('settings.exportSuccess'),
-                    `Archivo guardado en documentos de la app: ${file.uri}`
+                    t('settings.exportSavedLocation', { uri: file.uri })
                   );
                   return;
                 } catch (error: any) {
                   console.error('Export error', error);
-                  RNAlert.alert(t('alert.error'), t('settings.exportFailed') || 'No se pudo exportar la base de datos.');
+                  RNAlert.alert(t('alert.error'), t('settings.exportFailed'));
                 }
               }}
             >
@@ -179,7 +181,7 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
   );
 };
 
-const LANGUAGES = [
+const LANGUAGES: { code: LanguageCode; label: string }[] = [
   { code: 'es', label: 'Español' },
   { code: 'en', label: 'English' },
   { code: 'fr', label: 'Français' },

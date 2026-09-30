@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { useTranslation, Trans } from 'react-i18next';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { useGroupStore } from '@/src/stores/groupStore';
@@ -261,6 +262,7 @@ const modalStyles = StyleSheet.create({
 });
 
 const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const addExpense = useGroupStore((state) => state.addExpense);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
@@ -277,7 +279,7 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
   }, [group.balances, settlements]);
 
   const getMemberName = (memberId: string) => {
-    return group.members.find((m) => m.id === memberId)?.name || 'Unknown';
+    return group.members.find((m) => m.id === memberId)?.name || t('app.unknown');
   };
 
   // Filter expenses paid by the selected member
@@ -403,16 +405,16 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
     return (
       <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
         <TouchableOpacity style={tabStyles.backButton} onPress={handleBackToBalances}>
-          <ThemedText style={[tabStyles.backButtonText, { color: colors.text }]}>← Volver a saldos</ThemedText>
+          <ThemedText style={[tabStyles.backButtonText, { color: colors.text }]}>{t('balances.backToBalances')}</ThemedText>
         </TouchableOpacity>
 
         <ThemedText style={[tabStyles.sectionTitle, { color: colors.text, marginBottom: 16, fontSize: 18 }]}>
-          Gastos de {getMemberName(selectedMemberId)}
+          {t('balances.memberExpenses', { name: getMemberName(selectedMemberId) })}
         </ThemedText>
 
         {memberExpenses.length === 0 ? (
           <ThemedText style={[tabStyles.settlementText, { color: colors.muted, textAlign: 'center', marginTop: 24 }]}>
-            No hay gastos registrados para este miembro
+            {t('balances.noExpenses')}
           </ThemedText>
         ) : (
           <View style={tabStyles.expensesList}>
@@ -435,7 +437,7 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
                   </ThemedText>
                 </View>
                 <ThemedText style={[tabStyles.expenseDetail, { color: colors.muted }]}>
-                  Pagado por {getMemberName(expense.paidBy)} · {new Date(expense.date).toLocaleDateString()}
+                  {t('balances.paidBy', { name: getMemberName(expense.paidBy) })} · {new Date(expense.date).toLocaleDateString()}
                 </ThemedText>
               </View>
             ))}
@@ -443,7 +445,7 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
         )}
 
         <View style={[tabStyles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 16 }]}>
-          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>Total pagado</ThemedText>
+          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>{t('balances.totalPaid')}</ThemedText>
           <ThemedText style={[tabStyles.expenseAmount, { color: colors.primary, fontSize: 24, marginTop: 8 }]}>
             €{totalSpent.toFixed(2)}
           </ThemedText>
@@ -456,7 +458,7 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
   return (
     <View style={[tabStyles.tabContent, { backgroundColor: colors.background }]}>
       <View style={tabStyles.balancesList}>
-        <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>Saldos actuales</ThemedText>
+        <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>{t('balances.title')}</ThemedText>
         {group.balances.map((balance) => (
           <TouchableOpacity
             key={balance.memberId}
@@ -489,7 +491,7 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
 
       <View style={[tabStyles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={tabStyles.sectionHeader}>
-          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>Liquidación óptima</ThemedText>
+          <ThemedText style={[tabStyles.sectionTitle, { color: colors.text }]}>{t('balances.optimalSettlement')}</ThemedText>
           <TouchableOpacity onPress={openInfoModal} style={tabStyles.infoIcon}>
             <ThemedText style={[tabStyles.infoIconText, { color: colors.primary }]}>ℹ️</ThemedText>
           </TouchableOpacity>
@@ -504,14 +506,18 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
             >
               <View style={tabStyles.settlementCardContent}>
                 <ThemedText style={[tabStyles.settlementText, { color: colors.text }]}>
-                  {getMemberName(settlement.fromId)} debe €{settlement.amount.toFixed(2)} a {getMemberName(settlement.toId)}
+                  {t('balances.settlementLine', {
+                    from: getMemberName(settlement.fromId),
+                    amount: `€${settlement.amount.toFixed(2)}`,
+                    to: getMemberName(settlement.toId),
+                  })}
                 </ThemedText>
               </View>
               <TouchableOpacity
                 style={[tabStyles.settleButton, { backgroundColor: colors.primary }]}
                 onPress={() => handleSettle(index)}
               >
-                <ThemedText style={tabStyles.settleButtonText}>Saldar</ThemedText>
+                <ThemedText style={tabStyles.settleButtonText}>{t('balances.settle')}</ThemedText>
               </TouchableOpacity>
             </View>
           ))
@@ -521,11 +527,11 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
             style={[tabStyles.calculateButton, { backgroundColor: colors.primary }]}
             onPress={handleCalculateSettlements}
           >
-            <ThemedText style={tabStyles.calculateButtonText}>🔀 Calcular movimientos</ThemedText>
+            <ThemedText style={tabStyles.calculateButtonText}>{t('balances.calculate')}</ThemedText>
           </TouchableOpacity>
         ) : (
           <ThemedText style={[tabStyles.settlementText, { color: colors.muted }]}>
-            ✅ Saldos equilibrados
+            {t('balances.balanced')}
           </ThemedText>
         )}
       </View>
@@ -540,33 +546,58 @@ const BalancesTab: React.FC<BalancesTabProps> = ({ group }) => {
         <View style={[modalStyles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
           <View style={[modalStyles.modal, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <ThemedText style={[modalStyles.modalTitle, { color: colors.text }]}>
-              ℹ️ Cómo funciona la liquidación óptima
+              {t('balances.howItWorks')}
             </ThemedText>
             <View style={modalStyles.infoContent}>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                Se utiliza un <ThemedText style={{ fontWeight: '700', color: colors.primary }}>algoritmo greedy (voraz)</ThemedText> para calcular la forma más eficiente de saldar las deudas:
+                <Trans
+                  i18nKey="balances.howItWorksIntro"
+                  components={{
+                    algorithm: <ThemedText style={{ fontWeight: '700', color: colors.primary }} />,
+                  }}
+                />
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                1. Se identifica a la persona con <ThemedText style={{ fontWeight: '700', color: '#22c55e' }}>mayor saldo a favor</ThemedText> (más dinero debe recibir).
+                <Trans
+                  i18nKey="balances.step1"
+                  components={{
+                    maxCredit: <ThemedText style={{ fontWeight: '700', color: '#22c55e' }} />,
+                  }}
+                />
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                2. Se identifica a la persona con <ThemedText style={{ fontWeight: '700', color: '#ef4444' }}>mayor saldo en contra</ThemedText> (más dinero debe).
+                <Trans
+                  i18nKey="balances.step2"
+                  components={{
+                    maxDebt: <ThemedText style={{ fontWeight: '700', color: '#ef4444' }} />,
+                  }}
+                />
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                3. Se calcula un movimiento por el <ThemedText style={{ fontWeight: '600' }}>mínimo</ThemedText> entre lo que debe el deudor y lo que se le debe al acreedor.
+                <Trans
+                  i18nKey="balances.step3"
+                  components={{
+                    minimum: <ThemedText style={{ fontWeight: '600' }} />,
+                  }}
+                />
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                4. Se actualizan los saldos y se repite el proceso hasta que todas las deudas estén saldadas.
+                {t('balances.step4')}
               </ThemedText>
               <ThemedText style={[modalStyles.infoParagraph, { color: colors.text }]}>
-                Este algoritmo <ThemedText style={{ fontWeight: '700', color: colors.primary }}>minimiza el número total de movimientos</ThemedText> necesarios para dejar todas las cuentas en cero.
+                <Trans
+                  i18nKey="balances.howItWorksConclusion"
+                  components={{
+                    minimizes: <ThemedText style={{ fontWeight: '700', color: colors.primary }} />,
+                  }}
+                />
               </ThemedText>
             </View>
             <TouchableOpacity
               style={[modalStyles.closeButton, { backgroundColor: colors.primary }]}
               onPress={closeInfoModal}
             >
-              <ThemedText style={modalStyles.closeButtonText}>Cerrar</ThemedText>
+              <ThemedText style={modalStyles.closeButtonText}>{t('app.close')}</ThemedText>
             </TouchableOpacity>
           </View>
         </View>

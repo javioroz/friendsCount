@@ -64,17 +64,17 @@ const AddEditFavorScreen = () => {
 
   const handleSaveFavor = async () => {
     if (!groupId || !group) {
-      Alert.alert(t('alert.error'), 'Grupo no encontrado');
+      Alert.alert(t('alert.error'), t('favors.groupNotFound'));
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert(t('alert.error'), 'Por favor ingresa una descripción');
+      Alert.alert(t('alert.error'), t('favors.noDescription'));
       return;
     }
 
     if (!madeBy) {
-      Alert.alert(t('alert.error'), 'Selecciona quién hizo el favor');
+      Alert.alert(t('alert.error'), t('favors.selectWhoMade'));
       return;
     }
 
@@ -83,7 +83,7 @@ const AddEditFavorScreen = () => {
 
     // Check if group has API key when using IA
     if (useIA && !group.meta.llmApiKey) {
-      Alert.alert(t('alert.error'), 'El grupo no tiene configurada una API Key para IA. Por favor, configúrala en los ajustes del grupo.');
+      Alert.alert(t('alert.error'), t('favors.noApiKey'));
       return;
     }
 
@@ -100,7 +100,7 @@ const AddEditFavorScreen = () => {
       const member = group.members.find(m => m.id === madeBy);
 
       if (!member) {
-        Alert.alert(t('alert.error'), 'Miembro no encontrado');
+        Alert.alert(t('alert.error'), t('favors.memberNotFound'));
         setIsLoading(false);
         return;
       }
@@ -123,30 +123,30 @@ const AddEditFavorScreen = () => {
           console.error('Error calling LLM:', llmError);
           
           // Extract meaningful error message
-          let errorMessage = llmError.message || 'Error desconocido';
+          let errorMessage = llmError.message || t('aiErrors.unknown');
           
           // Check for specific error types
           if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-            errorMessage = 'API Key inválida o no autorizada (Error 401)';
+            errorMessage = t('aiErrors.unauthorized');
           } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
-            errorMessage = 'Acceso denegado a la API (Error 403)';
+            errorMessage = t('aiErrors.forbidden');
           } else if (errorMessage.includes('404') || errorMessage.includes('Not Found')) {
-            errorMessage = 'Endpoint de la API no encontrado (Error 404)';
+            errorMessage = t('aiErrors.notFound');
           } else if (errorMessage.includes('429') || errorMessage.includes('Too Many Requests') || errorMessage.includes('insufficient_quota') || errorMessage.includes('exceeded your current quota')) {
-            errorMessage = 'Se ha excedido el límite de uso de la API (Error 429 - Cuota insuficiente)';
+            errorMessage = t('aiErrors.quotaExceeded');
           } else if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error')) {
-            errorMessage = 'Error interno del servidor de la API (Error 500)';
+            errorMessage = t('aiErrors.serverError');
           } else if (errorMessage.includes('invalid JSON') || errorMessage.includes('parse')) {
-            errorMessage = 'La IA devolvió un formato no válido';
+            errorMessage = t('aiErrors.invalidJSON');
           } else if (errorMessage.includes('network') || errorMessage.includes('Network') || errorMessage.includes('fetch')) {
-            errorMessage = 'Error de conexión de red. Verifica tu conexión a internet';
+            errorMessage = t('aiErrors.networkError');
           } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
-            errorMessage = 'La petición a la IA ha tardado demasiado (timeout)';
+            errorMessage = t('aiErrors.timeout');
           }
           
           Alert.alert(
-            'Error en la evaluación con IA',
-            `No se pudo obtener la evaluación de la IA:\n\n${errorMessage}\n\n¿Quieres guardar el favor sin evaluación IA?`,
+            t('favors.aiErrorTitle'),
+            t('favors.aiErrorIntro', { error: errorMessage }),
             [
               { text: t('app.cancel'), style: 'cancel' },
               {
@@ -212,10 +212,10 @@ const AddEditFavorScreen = () => {
       // Update local store
       if (isEditMode && favorId) {
         updateFavor(groupId, favor);
-        Alert.alert('Éxito', 'Favor actualizado');
+        Alert.alert(t('alert.success'), t('favors.updated'));
       } else {
         addFavor(groupId, favor);
-        Alert.alert('Éxito', 'Favor añadido');
+        Alert.alert(t('alert.success'), t('favors.added'));
       }
 
       setIsLoading(false);
@@ -223,13 +223,13 @@ const AddEditFavorScreen = () => {
     } catch (error) {
       console.error('Unexpected error saving favor:', error);
       setIsLoading(false);
-      Alert.alert('Error', 'Ha ocurrido un error inesperado');
+      Alert.alert(t('alert.error'), t('favors.unexpectedError'));
     }
   };
 
   const handleDeleteFavor = (favorId: string | undefined) => {
       if (!groupId || !favorId) {
-        Alert.alert( t('favors.error'), 'No se pudo eliminar el favor. Inténtalo de nuevo.');
+        Alert.alert( t('favors.error'), t('favors.deleteError'));
         return;
       }
   
@@ -253,7 +253,7 @@ const AddEditFavorScreen = () => {
   if (!group) {
     return (
       <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
-        <ThemedText style={{ color: colors.text, margin: 16 }}>Grupo no encontrado</ThemedText>
+        <ThemedText style={{ color: colors.text, margin: 16 }}>{t('app.groupNotFound')}</ThemedText>
       </SafeAreaView>
     );
   }
@@ -352,7 +352,7 @@ const AddEditFavorScreen = () => {
             {isLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color="#fff" />
-                <ThemedText style={[styles.saveButtonText, { marginLeft: 8 }]}>{t('favors.procesingAI')}</ThemedText>
+                <ThemedText style={[styles.saveButtonText, { marginLeft: 8 }]}>{t('favors.processingAI')}</ThemedText>
               </View>
             ) : (
               <ThemedText style={styles.saveButtonText}>{isEditMode ? t('favors.save') : t('favors.add')}</ThemedText>

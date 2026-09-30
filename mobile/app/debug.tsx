@@ -5,6 +5,7 @@ import { useGroupStore } from '@/src/stores/groupStore';
 import { Stack } from 'expo-router';
 import { getGun, checkConnection } from '@/src/services/gunService';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme, type ThemeColors } from '@/src/contexts/ThemeContext';
 
 interface GunGroup {
@@ -17,6 +18,7 @@ interface GunGroup {
 }
 
 const DebugScreen = () => {
+  const { t } = useTranslation();
   const { groups, currentGroupId } = useGroupStore();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -54,21 +56,21 @@ const DebugScreen = () => {
         return (
           <View style={[styles.statusCard, styles.statusCardWarning]}>
             <ActivityIndicator size="small" color="#f59e0b" />
-            <Text style={[styles.statusText, { color: '#f59e0b' }]}>Verificando conexión...</Text>
+            <Text style={[styles.statusText, { color: '#f59e0b' }]}>{t('debug.checking')}</Text>
           </View>
         );
       case 'connected':
         return (
           <View style={[styles.statusCard, styles.statusCardSuccess]}>
             <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-            <Text style={[styles.statusText, { color: '#10b981' }]}>Conectado a GunDB</Text>
+            <Text style={[styles.statusText, { color: '#10b981' }]}>{t('debug.connected')}</Text>
           </View>
         );
       case 'disconnected':
         return (
           <View style={[styles.statusCard, styles.statusCardError]}>
             <Ionicons name="close-circle" size={20} color="#ef4444" />
-            <Text style={[styles.statusText, { color: '#ef4444' }]}>Desconectado de GunDB</Text>
+            <Text style={[styles.statusText, { color: '#ef4444' }]}>{t('debug.disconnected')}</Text>
           </View>
         );
     }
@@ -78,73 +80,73 @@ const DebugScreen = () => {
     <>
       <Stack.Screen
         options={{
-          title: 'Debug - Store Local',
-          headerBackTitle: 'Atrás',
+          title: t('header.debug'),
+          headerBackTitle: t('header.back'),
         }}
       />
       <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
           {/* GunDB Connection Status */}
           <View style={styles.section}>
-            <Text style={styles.title}>🔗 Estado de GunDB</Text>
-            
+            <Text style={styles.title}>{t('debug.gunStatus')}</Text>
+
             <View style={styles.infoCard}>
-              <Text style={styles.label}>URL del servidor:</Text>
+              <Text style={styles.label}>{t('debug.serverUrl')}</Text>
               <Text style={[styles.value, { fontSize: 12 }]} numberOfLines={1}>{gunUrl}</Text>
             </View>
 
             {renderConnectionStatus()}
 
             <View style={styles.infoCard}>
-              <Text style={styles.label}>Grupos en GunDB:</Text>
-              <Text style={styles.value}>{groups.length} (mismo que store local)</Text>
+              <Text style={styles.label}>{t('debug.groupsInGunDB')}</Text>
+              <Text style={styles.value}>{groups.length} {t('debug.sameAsLocalStore')}</Text>
             </View>
 
             <View style={styles.infoCard}>
-              <Text style={styles.label}>Nota:</Text>
-              <Text style={[styles.value, { fontSize: 11, textAlign: 'left' }]}>Los grupos en GunDB se sincronizan con el store local</Text>
+              <Text style={styles.label}>{t('debug.note')}</Text>
+              <Text style={[styles.value, { fontSize: 11, textAlign: 'left' }]}>{t('debug.gunNote')}</Text>
             </View>
           </View>
 
           {/* Local Store Status */}
           <View style={styles.section}>
-            <Text style={styles.title}>📦 Estado del Store Local</Text>
-            
+            <Text style={styles.title}>{t('debug.localStoreStatus')}</Text>
+
             <View style={styles.infoCard}>
-              <Text style={styles.label}>Total de grupos:</Text>
+              <Text style={styles.label}>{t('debug.totalGroups')}</Text>
               <Text style={styles.value}>{groups.length}</Text>
             </View>
 
             <View style={styles.infoCard}>
-              <Text style={styles.label}>Grupo actual:</Text>
-              <Text style={styles.value}>{currentGroupId || 'Ninguno'}</Text>
+              <Text style={styles.label}>{t('debug.currentGroup')}</Text>
+              <Text style={styles.value}>{currentGroupId || t('debug.none')}</Text>
             </View>
           </View>
 
           {/* Local Groups List */}
           <View style={styles.section}>
-            <Text style={styles.title}>📋 Lista de Grupos Locales</Text>
+            <Text style={styles.title}>{t('debug.localGroupsList')}</Text>
             {groups.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>No hay grupos en el store local</Text>
+                <Text style={styles.emptyText}>{t('debug.noGroups')}</Text>
               </View>
             ) : (
               groups.map((group, index) => (
                 <View key={group.id} style={styles.groupCard}>
                   <Text style={styles.groupHeader}>
-                    Grupo #{index + 1}: {group.meta.icon} {group.meta.name}
+                    {t('debug.groupTitle', { index: index + 1 })} {group.meta.icon} {group.meta.name}
                   </Text>
-                  <Text style={styles.groupInfo}>ID: {group.id}</Text>
-                  <Text style={styles.groupInfo}>Miembros: {group.members.length}</Text>
+                  <Text style={styles.groupInfo}>{t('debug.idLabel', { id: group.id })}</Text>
+                  <Text style={styles.groupInfo}>{t('debug.membersCount', { count: group.members.length })}</Text>
                   <Text style={styles.groupInfo}>
-                    Miembros: {group.members.map(m => m.name).join(', ')}
+                    {t('debug.membersNames', { names: group.members.map(m => m.name).join(', ') })}
                   </Text>
-                  <Text style={styles.groupInfo}>Divisa: {group.meta.currency}</Text>
+                  <Text style={styles.groupInfo}>{t('debug.currency', { currency: group.meta.currency })}</Text>
                   <Text style={styles.groupInfo}>
-                    Creado: {new Date(group.meta.createdAt).toLocaleString()}
+                    {t('debug.created', { date: new Date(group.meta.createdAt).toLocaleString() })}
                   </Text>
                   {group.id === currentGroupId && (
-                    <Text style={styles.currentBadge}>← Grupo Actual</Text>
+                    <Text style={styles.currentBadge}>{t('debug.currentGroupBadge')}</Text>
                   )}
                 </View>
               ))
@@ -153,7 +155,7 @@ const DebugScreen = () => {
 
           {/* JSON Export */}
           <View style={styles.section}>
-            <Text style={styles.title}>🔍 Datos en JSON</Text>
+            <Text style={styles.title}>{t('debug.jsonData')}</Text>
             <View style={styles.jsonContainer}>
               <Text style={styles.jsonText}>
                 {JSON.stringify(

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
@@ -17,6 +18,7 @@ import { Group, Member, Expense, Favor, MemberRanking, Balance } from '@/src/typ
 
 const JoinGroupScreen = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { addGroup } = useGroupStore();
   const [groupIdInput, setGroupIdInput] = useState('');
@@ -24,7 +26,7 @@ const JoinGroupScreen = () => {
 
   const handleJoinGroup = async () => {
     if (!groupIdInput.trim()) {
-      Alert.alert('Error', 'Por favor introduce un ID de grupo');
+      Alert.alert(t('alert.error'), t('join.noGroupId'));
       return;
     }
 
@@ -127,11 +129,11 @@ const JoinGroupScreen = () => {
       addGroup(group);
       console.log('✅ Group added to store');
       
-      Alert.alert('Éxito', 'Te has unido al grupo correctamente');
+      Alert.alert(t('alert.success'), t('join.groupJoined'));
       router.back();
     } catch (error: any) {
       console.error('🔴 Error joining group:', error);
-      Alert.alert('Error', error.message || 'No se pudo conectar con el servidor');
+      Alert.alert(t('alert.error'), error.message || t('join.connectionError'));
     } finally {
       setIsLoading(false);
     }
@@ -141,22 +143,22 @@ const JoinGroupScreen = () => {
     <>
       <Stack.Screen
         options={{
-          title: 'Unirse a Grupo',
-          headerBackTitle: 'Atrás',
+          title: t('join.title'),
+          headerBackTitle: t('header.back'),
         }}
       />
       <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.content}>
           <ThemedText style={[styles.title, { color: colors.text }]}>
-            Unirse a un grupo existente
+            {t('join.headline')}
           </ThemedText>
           <ThemedText style={[styles.subtitle, { color: colors.muted }]}>
-            Introduce el ID del grupo al que quieres unirte
+            {t('join.subtitle')}
           </ThemedText>
 
           <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: colors.text }]}>
-              ID del grupo
+              {t('join.groupId')}
             </ThemedText>
             <TextInput
               style={[
@@ -167,7 +169,7 @@ const JoinGroupScreen = () => {
                   color: colors.text,
                 },
               ]}
-              placeholder="Ej: group_1234567890"
+              placeholder={t('join.idPlaceholder')}
               placeholderTextColor={colors.muted}
               value={groupIdInput}
               onChangeText={setGroupIdInput}
@@ -187,7 +189,7 @@ const JoinGroupScreen = () => {
             {isLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <ThemedText style={styles.joinButtonText}>Unirse a grupo</ThemedText>
+              <ThemedText style={styles.joinButtonText}>{t('join.join')}</ThemedText>
             )}
           </TouchableOpacity>
 
@@ -200,7 +202,7 @@ const JoinGroupScreen = () => {
             disabled={isLoading}
           >
             <ThemedText style={[styles.cancelButtonText, { color: colors.text }]}>
-              Cancelar
+              {t('app.cancel')}
             </ThemedText>
           </TouchableOpacity>
         </View>
