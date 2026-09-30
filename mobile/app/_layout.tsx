@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { ThemeProvider, useTheme } from '@/src/contexts/ThemeContext';
 import { useThemeStore } from '@/src/stores/themeStore';
 import { useLanguageStore } from '@/src/stores/languageStore';
+import { useServerStore } from '@/src/stores/serverStore';
+import { getRelayUrl } from '@/src/services/gunService';
 import SettingsMenu from '@/src/components/settingsMenu';
 
 const HeaderRightButton = ({ onPress }: { onPress: () => void }) => {
@@ -21,10 +23,16 @@ const AppContent = () => {
   const { isDarkMode, colors, hasHydrated, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const languageHydrated = useLanguageStore((state) => state.hasHydrated);
+  const serverHydrated = useServerStore((state) => state.hasHydrated);
+  // Subscribing to the stored URL is what re-renders this layout when the user
+  // saves a new server in the settings menu.
+  const storedRelayUrl = useServerStore((state) => state.relayUrl);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   // Rendering before the stored language loads would flash the default copy.
-  if (!hasHydrated || !languageHydrated) {
+  // The relay must be loaded first too, otherwise the first Gun instance would
+  // connect to the compiled-in default and ignore the user's own server.
+  if (!hasHydrated || !languageHydrated || !serverHydrated) {
     return <View style={[styles.container, { backgroundColor: colors.background }]} />;
   }
 
@@ -32,6 +40,11 @@ const AppContent = () => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SettingsMenu visible={isModalVisible} onClose={() => setIsModalVisible(false)} />
       <Stack
+        // Remounting the navigator when the relay changes forces every open
+        // screen to resubscribe: Gun listeners registered on the previous
+        // instance would otherwise stay attached to the old server and the
+        // group would silently stop syncing after the change.
+        key={`gun-${storedRelayUrl ?? getRelayUrl()}`}
         screenOptions={({ route }) => ({
           headerStyle: {
             backgroundColor: colors.headerBackground,

@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, Modal, Text, Switch, ScrollView, StyleSheet, Platform, Alert as RNAlert, Image, Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Modal, Text, Switch, ScrollView, StyleSheet, Platform, Alert as RNAlert, Image, Linking, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { useGroupStore } from '@/src/stores/groupStore';
 import * as FileSystem from 'expo-file-system';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 import i18n from '@/src/i18n/i18n';
 import { useLanguageStore, type LanguageCode } from '@/src/stores/languageStore';
+import { useServerStore, normalizeRelayUrl } from '@/src/stores/serverStore';
+import { getRelayUrl } from '@/src/services/gunService';
 
 const BTC_ADDRESS = "bt1qk9fth93zngtxtyg72s5qjlsju70ufdltzqk4f0";
+
+const DEV_TAPS_REQUIRED = 5;
 
 interface SettingsMenuProps {
   visible: boolean;
@@ -19,7 +24,59 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
   const { isDarkMode, colors, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const setLanguage = useLanguageStore((state) => state.setLanguage);
+  const router = useRouter();
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+
+  // Hidden developer panel: revealed by tapping "About the developer" five times.
+  const [devTaps, setDevTaps] = useState(0);
+  const [showServerField, setShowServerField] = useState(false);
+  const [relayDraft, setRelayDraft] = useState('');
+
+  const storedRelayUrl = useServerStore((state) => state.relayUrl);
+  const setRelayUrl = useServerStore((state) => state.setRelayUrl);
+
+  // Closing the modal hides the field again, as requested.
+  useEffect(() => {
+    if (!visible) {
+      setDevTaps(0);
+      setShowServerField(false);
+    }
+  }, [visible]);
+
+  const handleDeveloperTap = () => {
+    // Five taps on the "About the developer" row reveal the server field.
+    // The counter is computed outside the state updater to keep it pure.
+    if (devTaps + 1 >= DEV_TAPS_REQUIRED) {
+      setDevTaps(0);
+      setShowServerField(true);
+      setRelayDraft(storedRelayUrl ?? getRelayUrl());
+    } else {
+      setDevTaps(devTaps + 1);
+    }
+  };
+
+  const openDebugScreen = () => {
+    // The modal is closed first so the screen is not pushed underneath it.
+    onClose();
+    router.push('/debug');
+  };
+
+  const saveRelayUrl = () => {
+    const normalized = normalizeRelayUrl(relayDraft);
+    if (relayDraft.trim() === '') {
+      // Empty means "go back to the default compiled into the app".
+      setRelayUrl(null);
+      setRelayDraft('');
+      return;
+    }
+    if (!normalized) {
+      RNAlert.alert(t('alert.error'), t('settings.relayInvalid'));
+      return;
+    }
+    setRelayUrl(normalized);
+    setRelayDraft(normalized);
+    RNAlert.alert(t('alert.success'), t('settings.relaySaved'));
+  };
 
   const changeLanguage = (lang: LanguageCode) => {
     setLanguage(lang);
@@ -146,7 +203,9 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
             </TouchableOpacity>
           </View>
           <View style={styles.settingItem}>
-            <Text style={[styles.settingLabel, { color: colors.text }]}>{t('settings.developerInfo')}</Text>
+            <TouchableOpacity onPress={handleDeveloperTap} activeOpacity={0.6}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>{t('settings.developerInfo')}</Text>
+            </TouchableOpacity>
             <Text style={[styles.modalText, { color: colors.text }]}>
               {t('settings.developerText')}
             </Text>
@@ -174,6 +233,63 @@ const SettingsMenu = ({ visible, onClose }: SettingsMenuProps) => {
                 <Image source={require('../../assets/donate.png')} style={styles.developerImage} />
               </TouchableOpacity>
             </View>
+
+            {showServerField && (
+              <View style={[styles.serverField, { borderColor: colors.border }]}>
+                <Text style={[styles.settingLabel, { color: colors.text }]}>
+                  {t('settings.relayServer')}
+                </Text>
+                <TextInput
+                  style={[
+                    styles.serverInput,
+                    {
+                      color: colors.text,
+                      borderColor: colors.text,
+                      backgroundColor: colors.background,
+                    },
+                  ]}
+                  value={relayDraft}
+                  onChangeText={setRelayDraft}
+                  placeholder={getRelayUrl()}
+                  placeholderTextColor={colors.text}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                  onSubmitEditing={saveRelayUrl}
+                />
+                <Text style={[styles.serverHint, { color: colors.text }]}>
+                  {t('settings.relayHint')}
+                </Text>
+                <View style={styles.rowBetween}>
+                  <TouchableOpacity onPress={saveRelayUrl} style={{ flex: 1, marginRight: 10 }}>
+                    <Text style={[styles.exportButtonText, { color: colors.primary }]}>
+                      {t('settings.relaySave')}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setRelayUrl(null);
+                      setRelayDraft('');
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    <Text style={[styles.exportButtonText, { color: colors.secondary }]}>
+                      {t('settings.relayReset')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  onPress={openDebugScreen}
+                  style={[styles.debugButton, { borderColor: colors.border }]}
+                >
+                  <Ionicons name="pulse-outline" size={16} color={colors.primary} />
+                  <Text style={[styles.debugButtonText, { color: colors.primary }]}>
+                    {t('settings.openDebug')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -283,6 +399,38 @@ const styles = StyleSheet.create({
   },
   exportButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  serverField: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  serverInput: {
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    fontSize: 14,
+  },
+  serverHint: {
+    marginTop: 8,
+    fontSize: 11,
+    opacity: 0.7,
+  },
+  debugButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    paddingVertical: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    gap: 8,
+  },
+  debugButtonText: {
+    fontSize: 14,
     fontWeight: '600',
   },
   developerImage: {

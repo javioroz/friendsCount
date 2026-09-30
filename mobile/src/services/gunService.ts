@@ -1,24 +1,132 @@
 import Gun from 'gun';
 import 'gun/sea';
 import { Group, Expense, Favor, Member, MemberRanking } from '../types';
+import { useServerStore, normalizeRelayUrl } from '../stores/serverStore';
 
-// Configuration from environment
-const GUN_RELAY_URL = process.env.GUN_RELAY || 'ws://localhost:3001/gun';
+// Configuration from environment.
+//
+// Solo las variables que empiezan por EXPO_PUBLIC_ se sustituyen al compilar
+// (ver node_modules/babel-preset-expo/build/inline-env-vars.js). Por eso el
+// nombre es EXPO_PUBLIC_GUN_RELAY y no GUN_RELAY: esta ultima llega como
+// undefined en un release build y la app caeria a localhost, que en un
+// telefono es el propio telefono, con lo que no conectaria con ningun relay.
+// Valor por defecto compilado en la app. Solo se usa si el usuario no ha
+// configurado ninguna direccion en el menu de ajustes, de modo que un dominio
+// mal configurado en el build se puede corregir sin republicar la app.
+const buildRelayRaw = process.env.EXPO_PUBLIC_GUN_RELAY;
+
+const DEFAULT_DEV_RELAY = 'ws://localhost:3001/gun';
+
+// El manifest de release no declara usesCleartextTraffic, asi que Android
+// bloquea ws://. En dev si esta permitido (src/debug/AndroidManifest.xml).
+const isDev = typeof __DEV__ !== 'undefined' && __DEV__;
+
+// El valor del build tambien se normaliza: si alguien escribe un puerto
+// duplicado o se inventa el esquema, Gun recibiria una cadena que ni es una URL
+// y la app se quedaria sin conectar sin explicar por que. Si no se puede
+// normalizar, se descarta y se avisa con el issue 'invalidBuild'.
+const buildRelay = buildRelayRaw ? normalizeRelayUrl(buildRelayRaw) : null;
+
+/**
+ * URL del relay configurada por el usuario en los ajustes, o null si no hay.
+ * Se lee del store en cada llamada (y no al importar el modulo) para que un
+ * cambio hecho en caliente tenga efecto sin reiniciar la app.
+ */
+export const getConfiguredRelay = (): string | null =>
+  useServerStore.getState().relayUrl;
+
+/**
+ * URL del relay que la app va a usar: la de los ajustes si existe, si no la
+ * compilada en el build, y en dev el relay local.
+ */
+export const getRelayUrl = (): string =>
+  getConfiguredRelay() || buildRelay || DEFAULT_DEV_RELAY;
+
+/**
+ * Problema de configuracion del relay, o null si esta bien.
+ *
+ * Se devuelve un codigo corto y no un texto: los textos viven en i18n y asi
+ * se muestran traducidos. Ademas asi no depende de que una cadena larga
+ * sobreviva al minificado del bundle de release, cosa que no ocurre de forma
+ * fiable cuando el valor ausente se resuelve en tiempo de compilacion.
+ */
+export type RelayConfigIssue = 'cleartext' | 'invalidBuild';
+
+export const getRelayUrlIssue = (): RelayConfigIssue | null => {
+  if (isDev) return null;
+  if (!getConfiguredRelay() && buildRelayRaw && !buildRelay) {
+    // Solo se puede dar si el valor venia del build, no de los ajustes, porque
+    // lo que guarda el usuario pasa antes por normalizeRelayUrl.
+    return 'invalidBuild';
+  }
+  if (getRelayUrl().startsWith('ws://')) return 'cleartext';
+  return null;
+};
 
 // Singleton Gun instance
 // Using 'any' type as Gun is a schemaless database and proper typing is complex
 let gunInstance: any = null;
+let gunInstancePeer: string | null = null;
+
+// Sockets opened by Gun, tracked through the WebSocket class we hand to it.
+//
+// Reaching into Gun's own opt.peers to close them is unreliable: gun.js keeps the
+// peers in an internal structure that is not the one exposed to callers, and the
+// socket may not even exist yet because Gun connects lazily. Passing our own
+// WebSocket implementation is a documented option (opt.WebSocket) and lets us
+// keep an exact list of every socket we own, so switching relay really releases
+// the previous connection instead of leaking it.
+const openSockets = new Set<any>();
+
+const createTrackedWebSocket = (): any => {
+  const Native = (globalThis as any).WebSocket;
+  if (typeof Native !== 'function') return undefined;
+
+  return new Proxy(Native, {
+    construct(target, args: any[]) {
+      const socket = new target(...args);
+      openSockets.add(socket);
+      return socket;
+    },
+  });
+};
+
+/**
+ * Close every socket opened by Gun.
+ *
+ * Clearing onclose first is what stops Gun from reconnecting: it installs a
+ * handler that calls reconnect(peer) when a socket drops, so closing without
+ * clearing it would leave it retrying against the old relay in the background.
+ */
+export const closeGunSockets = (): void => {
+  for (const socket of openSockets) {
+    try {
+      socket.onclose = null;
+      socket.close();
+    } catch {
+      // Best effort: a socket that refuses to close must not break the UI.
+    }
+  }
+  openSockets.clear();
+};
 
 /**
  * Get or create the GunDB instance
  */
 export const getGun = (): any => {
+  const currentUrl = getRelayUrl();
+  if (gunInstance && gunInstancePeer !== currentUrl) {
+    closeGunSockets();
+    gunInstance = null;
+  }
   if (!gunInstance) {
     gunInstance = Gun({
-      peers: [GUN_RELAY_URL],
+      peers: [currentUrl],
       localStorage: true,
       radisk: false,
+      WebSocket: createTrackedWebSocket(),
     });
+    gunInstancePeer = currentUrl;
   }
   return gunInstance;
 };

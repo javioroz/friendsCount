@@ -76,16 +76,50 @@ After deployment, Railway will provide you with a URL (e.g., `https://your-app.u
 
 Update your mobile app's environment variables:
 
-1. Copy `.env.example` to `.env`
-2. Update the production URLs:
+1. Copy `mobile/.env.example` to `mobile/.env` (the file goes in `mobile/`, not in
+   the repo root: Expo reads the `.env` of the Expo project root, which is `mobile/`)
+2. Update the production URL:
 
 ```env
-# Production
-SERVER_URL=https://your-app.up.railway.app
-GUN_RELAY=wss://your-app.up.railway.app/gun
+# mobile/.env
+EXPO_PUBLIC_GUN_RELAY=wss://your-app.up.railway.app/gun
 ```
 
-3. Rebuild your mobile app with these new environment variables.
+> The `EXPO_PUBLIC_` prefix is mandatory. `babel-preset-expo` only inlines env vars
+> with that prefix (see `node_modules/babel-preset-expo/build/inline-env-vars.js`).
+> A variable named `GUN_RELAY` or `SERVER_URL` reaches the app as `undefined`, so the
+> app silently falls back to `ws://localhost:3001/gun` — which on a phone means the
+> phone itself, and no relay is ever reached.
+
+3. The URL must use `wss://`. The release manifest does not declare
+   `usesCleartextTraffic`, so Android 9+ blocks `ws://`. (Debug builds do allow it,
+   which is why `ws://localhost:3001/gun` works in development.)
+4. Rebuild your mobile app so the value is baked into the bundle. Changing the
+   variable on the server afterwards does nothing until you ship a new build.
+5. Verify on the device: open the `/debug` screen. It shows the relay URL in use and
+   flags a wrong scheme or a missing variable, instead of failing silently.
+
+## 📦 Building the app (EAS)
+
+The app is built in the cloud with EAS, so no local JDK or Android SDK is needed.
+`eas.json` defines three profiles with different outputs:
+
+| Profile        | Output      | Distribution | Use                                |
+| -------------- | ----------- | ------------ | ---------------------------------- |
+| `development`  | `.apk`      | internal     | dev client, `expo start`           |
+| `preview`      | `.apk`      | internal     | test on a real device before Play  |
+| `production`   | `.aab`      | store        | upload to Google Play              |
+
+```bash
+# APK for sideloading / device testing
+eas build --platform android --profile preview
+
+# App Bundle for Google Play (production)
+eas build --platform android --profile production
+```
+
+`production` sets `autoIncrement: true`, so EAS bumps `versionCode` on each build.
+Note that Google Play requires an `.aab`; a direct `.apk` is only for sideloading.
 
 ## 🔧 Railway Configuration Details
 

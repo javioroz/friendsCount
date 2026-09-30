@@ -3,7 +3,8 @@ import { ScrollView, View, Text, StyleSheet, RefreshControl, ActivityIndicator }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGroupStore } from '@/src/stores/groupStore';
 import { Stack } from 'expo-router';
-import { getGun, checkConnection } from '@/src/services/gunService';
+import { getGun, checkConnection, getRelayUrl, getRelayUrlIssue } from '@/src/services/gunService';
+import type { RelayConfigIssue } from '@/src/services/gunService';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme, type ThemeColors } from '@/src/contexts/ThemeContext';
@@ -24,12 +25,14 @@ const DebugScreen = () => {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [gunConnectionStatus, setGunConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [gunUrl, setGunUrl] = useState('');
+  const [gunUrlError, setGunUrlError] = useState<RelayConfigIssue | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    // Get Gun URL from environment or default
-    const gunRelayUrl = process.env.GUN_RELAY || 'ws://localhost:3001/gun';
-    setGunUrl(gunRelayUrl);
+    // La URL y cualquier error de configuracion los decide gunService, que es
+    // el modulo que realmente construye la conexion. Aqui solo se muestran.
+    setGunUrl(getRelayUrl());
+    setGunUrlError(getRelayUrlIssue());
 
     // Check connection status
     checkConnection().then(connected => {
@@ -94,6 +97,17 @@ const DebugScreen = () => {
               <Text style={styles.label}>{t('debug.serverUrl')}</Text>
               <Text style={[styles.value, { fontSize: 12 }]} numberOfLines={1}>{gunUrl}</Text>
             </View>
+
+            {gunUrlError !== null && (
+              <View style={[styles.infoCard, { borderColor: '#ef4444' }]}>
+                <Text style={[styles.statusText, { color: '#ef4444' }]}>{t('debug.relayConfigError')}</Text>
+                <Text style={[styles.value, { fontSize: 11, textAlign: 'left', color: '#ef4444' }]}>
+                  {gunUrlError === 'invalidBuild'
+                    ? t('debug.relayInvalidBuild')
+                    : t('debug.relayCleartext')}
+                </Text>
+              </View>
+            )}
 
             {renderConnectionStatus()}
 
