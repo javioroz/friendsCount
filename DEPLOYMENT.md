@@ -70,6 +70,22 @@ GunDB needs persistent storage to save data. In Railway:
 
 This ensures your GunDB data persists across deployments.
 
+Set the data path explicitly so it does not depend on the working directory
+Railway starts the process in:
+
+```env
+GUN_DATA_PATH=/app/server/radata
+```
+
+The server logs the resolved path on boot (`GunDB data path: ...`). Check that
+log line against your mount path after the first deploy: if they differ, Gun is
+writing to the ephemeral filesystem and your data will vanish on the next
+deploy.
+
+A volume can only be mounted on a single instance. If you ever scale the
+service to two or more replicas, point `GUN_DATA_PATH` at S3 storage through
+`gun-s3radix` instead, so every instance shares one copy of the data.
+
 ### Step 5: Update Mobile App Configuration
 
 After deployment, Railway will provide you with a URL (e.g., `https://your-app.up.railway.app`).
@@ -129,10 +145,13 @@ Note that Google Play requires an `.aab`; a direct `.apk` is only for sideloadin
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build:server"
   },
   "deploy": {
-    "startCommand": "cd server && npm start",
+    "startCommand": "node server/dist/index.js",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
@@ -140,7 +159,11 @@ Note that Google Play requires an `.aab`; a direct `.apk` is only for sideloadin
 ```
 
 - **NIXPACKS**: Railway's modern build system that automatically detects Node.js
-- **startCommand**: Tells Railway to start the server from the `server` directory
+- **buildCommand**: Compiles only the server. Without this, NIXPACKS runs the
+  root `build` script, which also calls `build:mobile`; `mobile` has no `build`
+  script, so the deploy fails before starting
+- **startCommand**: Starts the compiled server from the repo root
+- **healthcheckPath**: Railway polls `/health` to decide the deploy is live
 - **restartPolicy**: Automatically restarts on failure (max 10 retries)
 
 ### Build Process

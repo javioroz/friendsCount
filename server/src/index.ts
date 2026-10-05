@@ -18,11 +18,20 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Create HTTP server early so Gun can attach to it
 const server = http.createServer(app);
 
+// GunDB data directory. Absolute so it never depends on the cwd Railway
+// happens to start us in. Defaults to server/radata (gitignored); point
+// GUN_DATA_PATH at a mounted volume to keep data across deploys.
+const GUN_DATA_PATH = process.env.GUN_DATA_PATH
+  ? path.resolve(process.env.GUN_DATA_PATH)
+  : path.resolve(__dirname, '../radata');
+
 // Initialize GunDB with WebSocket relay
 const gun = Gun({
-  file: 'radata', // Persist data to radata directory (production-ready)
+  file: GUN_DATA_PATH, // Persist data to radata directory (production-ready)
   web: server as any, // Attach to HTTP server for WebSocket
 });
+
+console.log(`💾 GunDB data path: ${GUN_DATA_PATH}`);
 
 // Enable GunDB's real-time sync
 gun.on('auth', () => {

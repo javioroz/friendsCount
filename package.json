@@ -6,7 +6,9 @@
   "scripts": {
     "dev:mobile": "npm run dev --workspace=mobile",
     "dev:server": "npm run dev --workspace=server",
-    "dev": "npm run dev:mobile && npm run dev:server",
+    "dev": "concurrently -n server,mobile -c blue,green --kill-others \"npm:dev:server\" \"npm:dev:mobile\"",
+    "dev:android": "concurrently -n server,android -c blue,magenta --kill-others \"npm:dev:server\" \"npm:android\"",
+    "android": "npm run android --workspace=mobile",
     "build:mobile": "npm run build --workspace=mobile",
     "build:server": "npm run build --workspace=server",
     "build": "npm run build:server && npm run build:mobile",
@@ -44,5 +46,8 @@
   "license": "MIT",
   "dependencies": {
     "react-native-dotenv": "^3.4.11"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }

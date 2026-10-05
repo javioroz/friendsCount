@@ -26,6 +26,11 @@ web-build/
 # No versionarlas; EAS Build las regenera y así app.json manda de verdad.
 mobile/android/
 mobile/ios/
+# Salvaguarda: un `expo prebuild` lanzado desde la raíz puede tomar server/
+# por proyecto Expo y generar esto aquí. No debe existir.
+server/android/
+server/ios/
+server/app.json
 
 # Metro
 .metro-health-check*
