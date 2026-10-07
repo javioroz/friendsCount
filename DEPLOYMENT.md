@@ -48,26 +48,35 @@ railway up
 
 In **Service → Settings** make sure:
 
-- **Root Directory is empty** (the repository root). A subdirectory without
-  `package.json` (e.g. `server/src`) makes Nixpacks detect no language: the
-  Node toolchain is never installed and the build fails with
-  `npm: command not found` (exit 127).
-- **Builder**: Nixpacks (set via `railway.json`).
+- **Root Directory**: `/server`. Only files inside `server/` are pulled for the
+  build, so all commands run relative to `server/` (not the monorepo root).
+- **Config File Path**: `/server/railway.json`. The Railway config file does
+  **not** follow the Root Directory, so the absolute repo path must be given;
+  otherwise Railway keeps reading the monorepo-root `/railway.json`, whose
+  `npm run build:server` script does not exist in `server/package.json` and the
+  build fails with `Missing script: "build:server"`.
+- **Builder**: Nixpacks (set via `server/railway.json`).
 - Build Command and Start Command can stay in the dashboard too; they must
-  match `railway.json`. `nixpacks.toml` declares the same phases explicitly so
-  the build does not depend on autodetection.
+  match `server/railway.json`. `server/nixpacks.toml` declares the same phases
+  explicitly so the build does not depend on autodetection, and installs with
+  `npm install --include=dev` (the build runs under `NODE_ENV=production`, which
+  otherwise omits `typescript` and leaves the build phase without `tsc`).
 
 ### Step 3: Configure Environment Variables
 
-Railway will automatically use the `PORT` environment variable. However, you may want to set additional variables:
+Railway injects `PORT` automatically (the server reads `process.env.PORT`).
+Do **not** hardcode `PORT=3001`: Railway routes traffic to the port it assigns.
 
 1. In your Railway project dashboard, go to **"Variables"**
-2. Add these environment variables:
+2. Set:
 
 ```env
 NODE_ENV=production
-PORT=3001
 ```
+
+> The repo-root `.env` is not uploaded (Root Directory is `/server`, and `.env`
+> is gitignored), so anything the server needs at runtime must be set here.
+> `GUN_RELAY_HOST` is only used for log output and defaults to `localhost`.
 
 ### Step 4: Configure Persistent Storage (Important for GunDB)
 
@@ -77,8 +86,9 @@ GunDB needs persistent storage to save data. In Railway:
 2. Click **"Volumes"** tab
 3. Click **"New Volume"**
 4. Configure:
-   - **Mount Path**: `/app/server/radata`
-   - **Size**: Start with 1GB (adjust as needed)
+   - **Mount Path**: `/server/radata` (any absolute path works; the server reads
+     `RAILWAY_VOLUME_MOUNT_PATH`)
+   - **Size**: Start with 500MB and increase as GunDB grows
 5. Click **"Add Volume"**
 
 This ensures your GunDB data persists across deployments.
@@ -155,15 +165,18 @@ Note that Google Play requires an `.aab`; a direct `.apk` is only for sideloadin
 
 ### railway.json Explanation
 
+The deploy uses `server/railway.json` (Root Directory `/server`, Config File
+Path `/server/railway.json`):
+
 ```json
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm run build:server"
+    "buildCommand": "npm run build"
   },
   "deploy": {
-    "startCommand": "node server/dist/index.js",
+    "startCommand": "node dist/index.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
@@ -172,21 +185,25 @@ Note that Google Play requires an `.aab`; a direct `.apk` is only for sideloadin
 }
 ```
 
-- **NIXPACKS**: Railway's modern build system that automatically detects Node.js
-- **buildCommand**: Compiles only the server. Without this, NIXPACKS runs the
-  root `build` script, which also calls `build:mobile`; `mobile` has no `build`
-  script, so the deploy fails before starting
-- **startCommand**: Starts the compiled server from the repo root
+- **NIXPACKS**: Railway's build system, configured by `server/nixpacks.toml`
+- **buildCommand**: `npm run build` is `server/package.json`'s `tsc` script.
+  Paths are relative to `server/` because of the Root Directory
+- **startCommand**: Starts the compiled server (`server/dist/index.js`)
 - **healthcheckPath**: Railway polls `/health` to decide the deploy is live
 - **restartPolicy**: Automatically restarts on failure (max 10 retries)
 
+The monorepo root also ships `railway.json` / `nixpacks.toml` for a full
+repo-root deploy (`npm run build:server`, `node server/dist/index.js`). Those
+apply only when the Root Directory is left empty; they are ignored by this
+service.
+
 ### Build Process
 
-Railway will automatically:
-1. Detect Node.js from your `server/package.json`
-2. Run `npm install` in the `server` directory
-3. Run `npm run build` to compile TypeScript
-4. Start the server with `npm start`
+With Root Directory `/server`, Railway will:
+1. Detect Node.js from `server/package.json` (or use `server/nixpacks.toml`)
+2. Run `npm install --include=dev` in the `server` directory
+3. Run `npm run build` (TypeScript `tsc`) to produce `server/dist`
+4. Start the server with `node dist/index.js`
 
 ## 📊 Monitoring Your Deployment
 
@@ -240,8 +257,10 @@ Never commit sensitive data to `.env`. Railway's environment variables are secur
 
 ### GunDB Data Not Persisting
 
-1. Verify volume is mounted at `/app/server/radata`
-2. Check that `server/src/index.ts` uses `file: 'radata'`
+1. Verify the volume mount path matches `RAILWAY_VOLUME_MOUNT_PATH` (this
+   service uses `/server/radata`)
+2. Check the boot log line `GunDB data path: ...`; if it points at `/app/radata`
+   the volume variable was not seen and data is going to the ephemeral disk
 3. Ensure `.gitignore` includes `server/radata/`
 
 ### WebSocket Connection Issues

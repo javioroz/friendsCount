@@ -1,0 +1,20 @@
+# Build plan for the isolated /server Railway service.
+#
+# The service has Root Directory = /server, so only this folder is sent to
+# the builder: the repo-root railway.json / nixpacks.toml never reach the
+# build, and commands must be relative to server/ (not the monorepo root).
+
+[phases.setup]
+nixPkgs = ["nodejs_24"]
+
+[phases.install]
+# NODE_ENV=production is set during the build, which makes npm omit
+# devDependencies by default. typescript lives there, so force it in,
+# otherwise the build phase has no tsc binary.
+cmds = ["npm install --include=dev"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "node dist/index.js"

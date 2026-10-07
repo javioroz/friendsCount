@@ -6,10 +6,12 @@
 # explicitly makes the build independent of autodetection.
 
 [phases.setup]
-nixPkgs = ["nodejs_24", "npm-9_x"]
+nixPkgs = ["nodejs_24"]
 
 [phases.install]
-cmds = ["npm ci"]
+# NODE_ENV=production makes npm omit devDependencies; typescript is needed
+# for build:server, so force dev deps in.
+cmds = ["npm ci --include=dev"]
 
 [phases.build]
 cmds = ["npm run build:server"]
