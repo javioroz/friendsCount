@@ -44,6 +44,19 @@ railway init
 railway up
 ```
 
+### Important: Service Settings
+
+In **Service → Settings** make sure:
+
+- **Root Directory is empty** (the repository root). A subdirectory without
+  `package.json` (e.g. `server/src`) makes Nixpacks detect no language: the
+  Node toolchain is never installed and the build fails with
+  `npm: command not found` (exit 127).
+- **Builder**: Nixpacks (set via `railway.json`).
+- Build Command and Start Command can stay in the dashboard too; they must
+  match `railway.json`. `nixpacks.toml` declares the same phases explicitly so
+  the build does not depend on autodetection.
+
 ### Step 3: Configure Environment Variables
 
 Railway will automatically use the `PORT` environment variable. However, you may want to set additional variables:
@@ -70,17 +83,18 @@ GunDB needs persistent storage to save data. In Railway:
 
 This ensures your GunDB data persists across deployments.
 
-Set the data path explicitly so it does not depend on the working directory
-Railway starts the process in:
+No extra configuration is needed: the server already resolves the data path to
+`RAILWAY_VOLUME_MOUNT_PATH` automatically when that variable is present, so it
+writes inside the volume without manual setup. The resolution order is:
 
-```env
-GUN_DATA_PATH=/app/server/radata
-```
+1. `GUN_DATA_PATH` (if you want to override)
+2. `RAILWAY_VOLUME_MOUNT_PATH` (set by Railway for the volume)
+3. `server/radata` (relative to the compiled server)
 
-The server logs the resolved path on boot (`GunDB data path: ...`). Check that
-log line against your mount path after the first deploy: if they differ, Gun is
-writing to the ephemeral filesystem and your data will vanish on the next
-deploy.
+The server creates the directory if missing and logs the resolved path on boot
+(`GunDB data path: ...`). After the first deploy, check that log line against
+your mount path: if they differ, Gun is writing to the ephemeral filesystem and
+your data will vanish on the next deploy.
 
 A volume can only be mounted on a single instance. If you ever scale the
 service to two or more replicas, point `GUN_DATA_PATH` at S3 storage through

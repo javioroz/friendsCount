@@ -1,0 +1,18 @@
+# Nixpacks build plan.
+#
+# Railway ran a plan containing only `build` and `start`, so the Node
+# toolchain was never installed and `npm run build:server` died with
+# `npm: command not found` (exit code 127). Declaring setup and install
+# explicitly makes the build independent of autodetection.
+
+[phases.setup]
+nixPkgs = ["nodejs_24", "npm-9_x"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build:server"]
+
+[start]
+cmd = "node server/dist/index.js"

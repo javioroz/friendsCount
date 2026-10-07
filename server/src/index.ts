@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import express from 'express';
 import http from 'http';
@@ -19,11 +20,19 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const server = http.createServer(app);
 
 // GunDB data directory. Absolute so it never depends on the cwd Railway
-// happens to start us in. Defaults to server/radata (gitignored); point
-// GUN_DATA_PATH at a mounted volume to keep data across deploys.
+// happens to start us in. GUN_DATA_PATH wins; on Railway we fall back to the
+// mounted volume path (RAILWAY_VOLUME_MOUNT_PATH) so data survives redeploys
+// without extra configuration; otherwise server/radata (gitignored).
 const GUN_DATA_PATH = process.env.GUN_DATA_PATH
   ? path.resolve(process.env.GUN_DATA_PATH)
+  : process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? path.resolve(process.env.RAILWAY_VOLUME_MOUNT_PATH)
   : path.resolve(__dirname, '../radata');
+
+// Gun writes into GUN_DATA_PATH and fails if the directory does not exist.
+// Create it up front so a missing parent (e.g. a volume not yet mounted on
+// the first boot) cannot crash the process.
+fs.mkdirSync(GUN_DATA_PATH, { recursive: true });
 
 // Initialize GunDB with WebSocket relay
 const gun = Gun({
