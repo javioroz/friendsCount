@@ -117,13 +117,21 @@ After deployment, Railway will provide you with a URL (e.g., `https://your-app.u
 Update your mobile app's environment variables:
 
 1. Copy `mobile/.env.example` to `mobile/.env` (the file goes in `mobile/`, not in
-   the repo root: Expo reads the `.env` of the Expo project root, which is `mobile/`)
-2. Update the production URL:
+   the repo root: Expo reads the `.env` of the Expo project root, which is `mobile/`).
+   This is enough for local builds (`expo start`).
+2. For **cloud (EAS) builds** the `.env` is gitignored and never uploaded, so the
+   value must live in `mobile/eas.json` under each profile's `env` block (already
+   set for `preview` and `production`), or as an EAS environment variable in the
+   Expo dashboard. Update the URL there:
 
 ```env
-# mobile/.env
-EXPO_PUBLIC_GUN_RELAY=wss://your-app.up.railway.app/gun
+# mobile/eas.json -> build.<profile>.env
+EXPO_PUBLIC_GUN_RELAY=wss://friendscountgithub-production.up.railway.app/gun
 ```
+
+> Use the public Railway domain on the default TLS port (443): the app talks to
+> `wss://<domain>/gun`. Do **not** append `:3001` — that is the container's
+> internal port, which Railway maps to the public 443 endpoint.
 
 > The `EXPO_PUBLIC_` prefix is mandatory. `babel-preset-expo` only inlines env vars
 > with that prefix (see `node_modules/babel-preset-expo/build/inline-env-vars.js`).
