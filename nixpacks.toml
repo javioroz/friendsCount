@@ -6,7 +6,7 @@
 # explicitly makes the build independent of autodetection.
 
 [phases.setup]
-nixPkgs = ["nodejs_24"]
+nixPkgs = ["nodejs_20"]
 
 [phases.install]
 # NODE_ENV=production makes npm omit devDependencies; typescript is needed

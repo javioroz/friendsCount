@@ -5,7 +5,7 @@
 # build, and commands must be relative to server/ (not the monorepo root).
 
 [phases.setup]
-nixPkgs = ["nodejs_24"]
+nixPkgs = ["nodejs_20"]
 
 [phases.install]
 # NODE_ENV=production is set during the build, which makes npm omit
